@@ -1,0 +1,57 @@
+{% extends 'PlantillaGeneral.html' %}
+{% load static %}
+
+{% block contenido %}
+<section class="padding-medium">
+  <div class="container my-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6 col-lg-5">
+        <div class="card border-0 shadow-lg rounded-3">
+          <div class="card-body p-4 p-md-5">
+            
+            <div class="text-center mb-4">
+              <img src="{% static 'images/main-logo.png' %}" alt="NEXORA EXPRESS" class="img-fluid mb-3" style="max-height: 50px;">
+              <h3 class="fw-bold text-uppercase">Crear Cuenta</h3>
+              <p class="text-muted">Regístrate en NEXORA EXPRESS</p>
+            </div>
+
+            <form method="post" action="{% url 'register' %}">
+              {% csrf_token %}
+
+              <div class="form-group mb-3">
+                <label for="username" class="form-label text-uppercase fw-bold small">Usuario</label>
+                <input type="text" class="form-control form-control-lg rounded-2 ps-3" id="username" name="username" placeholder="Tu usuario" required autofocus>
+              </div>
+
+              <div class="form-group mb-3">
+                <label for="email" class="form-label text-uppercase fw-bold small">Correo Electrónico</label>
+                <input type="email" class="form-control form-control-lg rounded-2 ps-3" id="email" name="email" placeholder="correo@ejemplo.com">
+              </div>
+
+              <div class="form-group mb-3">
+                <label for="password" class="form-label text-uppercase fw-bold small">Contraseña</label>
+                <input type="password" class="form-control form-control-lg rounded-2 ps-3" id="password" name="password" placeholder="••••••••" required>
+              </div>
+
+              <div class="form-group mb-4">
+                <label for="password_confirm" class="form-label text-uppercase fw-bold small">Confirmar Contraseña</label>
+                <input type="password" class="form-control form-control-lg rounded-2 ps-3" id="password_confirm" name="password_confirm" placeholder="••••••••" required>
+              </div>
+
+              <div class="d-grid mb-3">
+                <button type="submit" class="btn btn-dark btn-lg text-uppercase fw-bold py-3">Registrarme</button>
+              </div>
+
+            </form>
+
+            <div class="text-center mt-4">
+              <p class="mb-0 text-muted">¿Ya tienes cuenta? <a href="{% url 'login' %}" class="fw-bold text-dark text-decoration-none">Inicia sesión</a></p>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
