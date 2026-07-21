@@ -1,0 +1,169 @@
+{% extends 'PlantillaGeneral.html' %}
+{% block contenido %}
+<div class="container my-5">
+  <div class="card shadow-lg border-0 rounded-4">
+    <div class="card-header bg-primary text-white py-3 rounded-top-4 d-flex justify-content-between align-items-center">
+      <h3 class="mb-0 fs-4 fw-bold">
+        <i class="fa-solid fa-truck-fast me-2"></i> Rastrear Encomienda: <span class="text-warning">{{ envio.numero_tracking }}</span>
+      </h3>
+      <span class="badge bg-light text-primary px-3 py-2 fs-6 shadow-sm">
+        <i class="fa-solid fa-lock me-1"></i> Consulta Confidencial
+      </span>
+    </div>
+
+    <div class="card-body p-4">
+      
+      <!-- Banner de Estado Actual -->
+      <div class="alert {% if envio.estado == 'entregado' %}alert-success{% elif envio.estado == 'en_transito' %}alert-info{% elif envio.estado == 'pendiente' %}alert-warning{% else %}alert-danger{% endif %} shadow-sm d-flex align-items-center p-3 mb-4 rounded-3">
+        <div class="fs-1 me-3">
+          {% if envio.estado == 'entregado' %}
+            <i class="fa-solid fa-circle-check text-success"></i>
+          {% elif envio.estado == 'en_transito' %}
+            <i class="fa-solid fa-route text-info"></i>
+          {% elif envio.estado == 'pendiente' %}
+            <i class="fa-solid fa-clock text-warning"></i>
+          {% else %}
+            <i class="fa-solid fa-circle-xmark text-danger"></i>
+          {% endif %}
+        </div>
+        <div>
+          <h4 class="alert-heading mb-1 fw-bold">Estado: {{ envio.get_estado_display }}</h4>
+          <p class="mb-0 fs-6">
+            <strong>Ubicación Actual:</strong> {{ envio.ubicacion_actual }}
+          </p>
+          {% if envio.hora_estimada_llegada %}
+            <p class="mb-0 text-muted">
+              <i class="fa-regular fa-calendar-check me-1"></i> Hora Estimada de Llegada (ETA): <strong>{{ envio.hora_estimada_llegada|date:"d/m/Y H:i" }}</strong>
+            </p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Línea de Tiempo Servientrega -->
+      <div class="my-5">
+        <h5 class="fw-bold mb-4 text-secondary"><i class="fa-solid fa-timeline me-2"></i>Progreso del Envío</h5>
+        <div class="row text-center position-relative">
+          
+          <div class="col-3">
+            <div class="rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm {% if envio.estado == 'pendiente' or envio.estado == 'en_transito' or envio.estado == 'entregado' %}bg-primary text-white{% else %}bg-secondary text-white-50{% endif %}" style="width: 60px; height: 60px;">
+              <i class="fa-solid fa-boxes-packing fs-4"></i>
+            </div>
+            <h6 class="fw-bold mt-2 mb-0">1. Recepcionado</h6>
+            <small class="text-muted">{{ envio.oficina }} ({{ envio.origen }})</small>
+          </div>
+
+          <div class="col-3">
+            <div class="rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm {% if envio.estado == 'en_transito' or envio.estado == 'entregado' %}bg-primary text-white{% else %}bg-secondary text-white-50{% endif %}" style="width: 60px; height: 60px;">
+              <i class="fa-solid fa-truck-fast fs-4"></i>
+            </div>
+            <h6 class="fw-bold mt-2 mb-0">2. En Transporte</h6>
+            <small class="text-muted">{{ envio.transporte }}</small>
+          </div>
+
+          <div class="col-3">
+            <div class="rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm {% if envio.estado == 'en_transito' or envio.estado == 'entregado' %}bg-info text-white{% else %}bg-secondary text-white-50{% endif %}" style="width: 60px; height: 60px;">
+              <i class="fa-solid fa-map-location-dot fs-4"></i>
+            </div>
+            <h6 class="fw-bold mt-2 mb-0">3. En Tránsito</h6>
+            <small class="text-muted">Hacia {{ envio.ciudad_destino }}</small>
+          </div>
+
+          <div class="col-3">
+            <div class="rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm {% if envio.estado == 'entregado' %}bg-success text-white{% else %}bg-secondary text-white-50{% endif %}" style="width: 60px; height: 60px;">
+              <i class="fa-solid fa-circle-check fs-4"></i>
+            </div>
+            <h6 class="fw-bold mt-2 mb-0">4. Entregado</h6>
+            <small class="text-muted">Destinatario Final</small>
+          </div>
+
+
+        </div>
+      </div>
+
+      <hr class="my-4">
+
+      <!-- Detalles en Grilla -->
+      <div class="row g-4">
+        
+        <!-- Datos de Origen y Remitente -->
+        <div class="col-md-6">
+          <div class="p-3 border rounded-3 bg-light h-100">
+            <h5 class="fw-bold text-primary mb-3">
+              <i class="fa-solid fa-building-user me-2"></i>Origen y Remitente
+            </h5>
+            <ul class="list-unstyled mb-0 lh-lg">
+              <li><strong>Ciudad de Origen:</strong> <span class="badge bg-secondary">{{ envio.origen }}</span></li>
+              <li><strong>Oficina de Despacho:</strong> {{ envio.oficina }}</li>
+              <li><strong>Transporte Asignado:</strong> {{ envio.transporte }}</li>
+              <li><strong>Remitente:</strong> {{ envio.nombre_remitente }}</li>
+              <li><strong>Teléfono:</strong> {{ envio.telefono_remitente }}</li>
+              <li><strong>Dirección:</strong> {{ envio.direccion_remitente }}</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Datos de Destino y Destinatario -->
+        <div class="col-md-6">
+          <div class="p-3 border rounded-3 bg-light h-100">
+            <h5 class="fw-bold text-success mb-3">
+              <i class="fa-solid fa-location-dot me-2"></i>Destino y Destinatario
+            </h5>
+            <ul class="list-unstyled mb-0 lh-lg">
+              <li><strong>Ciudad de Destino:</strong> <span class="badge bg-success">{{ envio.ciudad_destino }}</span></li>
+              <li><strong>Destinatario:</strong> {{ envio.nombre_destinatario }}</li>
+              <li><strong>Teléfono:</strong> {{ envio.telefono_destinatario }}</li>
+              <li><strong>Dirección Exacta:</strong> {{ envio.direccion_destinatario }}</li>
+              <li><strong>Correo Electrónico:</strong> {{ envio.correo_destinatario|default:"No especificado" }}</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Especificaciones de Paquete -->
+        <div class="col-12">
+          <div class="p-3 border rounded-3 bg-light">
+            <h5 class="fw-bold text-dark mb-3">
+              <i class="fa-solid fa-box-archive me-2"></i>Detalles del Paquete y Costo
+            </h5>
+            <div class="row">
+              <div class="col-md-4">
+                <p class="mb-1"><strong>Descripción:</strong></p>
+                <p class="text-muted">{{ envio.descripcion }}</p>
+              </div>
+              <div class="col-md-3">
+                <p class="mb-1"><strong>Peso:</strong> {{ envio.peso }} kg</p>
+                <p class="mb-1"><strong>Dimensiones:</strong> {{ envio.dimensiones|default:"Standard" }}</p>
+              </div>
+              <div class="col-md-3">
+                <p class="mb-1"><strong>Costo del Envío:</strong></p>
+                <span class="fs-4 fw-bold text-success">${{ envio.costo }}</span>
+              </div>
+              <div class="col-md-2">
+                <p class="mb-1"><strong>Fecha de Registro:</strong></p>
+                <small class="text-muted">{{ envio.fecha_creacion|date:"d/m/Y H:i" }}</small>
+              </div>
+            </div>
+            {% if envio.observaciones %}
+              <div class="mt-3 p-2 bg-white rounded border">
+                <strong>Observaciones de Entrega:</strong> {{ envio.observaciones }}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+      </div>
+
+      <div class="mt-4 text-center">
+        {% if is_admin %}
+          <a href="{% url 'admin_actualizar_envio' envio.id %}" class="btn btn-warning me-2 fw-bold">
+            <i class="fa-solid fa-pen-to-square me-1"></i> Actualizar Estado (Admin)
+          </a>
+        {% endif %}
+        <a href="{% url 'inicio' %}" class="btn btn-secondary fw-bold">
+          <i class="fa-solid fa-arrow-left me-1"></i> Volver al Inicio
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -3,85 +3,143 @@
 
 {% block contenido %}
 <section class="padding-medium">
-  <div class="container my-5">
+  <div class="container my-4">
     <div class="row justify-content-center">
-      <div class="col-lg-8">
-        <div class="card border-0 shadow-lg rounded-3">
-          <div class="card-body p-4 p-md-5">
-            
-            <div class="text-center mb-4">
-              <h3 class="fw-bold text-uppercase">Crear Envío</h3>
-              <p class="text-muted">Completa los datos para registrar un nuevo envío</p>
+      <div class="col-lg-9">
+        <div class="card border-0 shadow-lg rounded-4">
+          <div class="card-header bg-dark text-white p-4 rounded-top-4 d-flex justify-content-between align-items-center">
+            <div>
+              <h3 class="fw-bold text-uppercase mb-1 text-warning">
+                <i class="fa-solid fa-box-archive me-2"></i>Registrar Nueva Encomienda
+              </h3>
+              <p class="mb-0 text-white-50 small">Sistema de Logística Exprés Servientrega</p>
             </div>
+            <span class="badge bg-primary px-3 py-2 fs-6">
+              <i class="fa-solid fa-location-dot me-1"></i> Origen: Latacunga
+            </span>
+          </div>
 
-            <form method="post" action="{% url 'crear_envio' %}">
+          <div class="card-body p-4 p-md-5">
+
+            <form id="formCrearEnvio" method="post" action="{% url 'crear_envio' %}">
               {% csrf_token %}
 
-              <h5 class="fw-bold text-uppercase mb-3 text-dark">Datos del Remitente</h5>
-              
-              <div class="row mb-3">
-                <div class="col-md-6">
-                  <label for="nombre_remitente" class="form-label text-uppercase fw-bold small">Nombre Completo *</label>
-                  <input type="text" class="form-control rounded-2" id="nombre_remitente" name="nombre_remitente" required>
-                </div>
-                <div class="col-md-6">
-                  <label for="telefono_remitente" class="form-label text-uppercase fw-bold small">Teléfono *</label>
-                  <input type="text" class="form-control rounded-2" id="telefono_remitente" name="telefono_remitente" required>
-                </div>
-              </div>
-
-              <div class="mb-4">
-                <label for="direccion_remitente" class="form-label text-uppercase fw-bold small">Dirección de Recogida *</label>
-                <textarea class="form-control rounded-2" id="direccion_remitente" name="direccion_remitente" rows="2" required></textarea>
-              </div>
-
-              <hr class="my-4">
-
-              <h5 class="fw-bold text-uppercase mb-3 text-dark">Datos del Destinatario</h5>
-              
-              <div class="row mb-3">
-                <div class="col-md-6">
-                  <label for="nombre_destinatario" class="form-label text-uppercase fw-bold small">Nombre Completo *</label>
-                  <input type="text" class="form-control rounded-2" id="nombre_destinatario" name="nombre_destinatario" required>
-                </div>
-                <div class="col-md-6">
-                  <label for="telefono_destinatario" class="form-label text-uppercase fw-bold small">Teléfono *</label>
-                  <input type="text" class="form-control rounded-2" id="telefono_destinatario" name="telefono_destinatario" required>
+              <!-- SECCIÓN 1: ORIGEN, OFICINA Y TRANSPORTE -->
+              <div class="p-3 bg-light rounded-3 mb-4 border">
+                <h5 class="fw-bold text-primary mb-3">
+                  <i class="fa-solid fa-building me-2"></i>1. Logística y Punto de Origen
+                </h5>
+                <div class="row g-3">
+                  <div class="col-md-4">
+                    <label for="origen" class="form-label fw-bold small">Ciudad de Origen *</label>
+                    <input type="text" class="form-control" id="origen" name="origen" value="Latacunga" required>
+                  </div>
+                  <div class="col-md-4">
+                    <label for="oficina" class="form-label fw-bold small">Oficina de Despacho *</label>
+                    <select class="form-select" id="oficina" name="oficina" required>
+                      <option value="Oficina Central Latacunga" selected>Oficina Central Latacunga</option>
+                      <option value="Agencia Latacunga Centro">Agencia Latacunga Centro</option>
+                      <option value="Terminal Terrestre Latacunga">Terminal Terrestre Latacunga</option>
+                      <option value="Oficina Norte Latacunga">Oficina Norte Latacunga</option>
+                    </select>
+                  </div>
+                  <div class="col-md-4">
+                    <label for="transporte" class="form-label fw-bold small">Unidad de Transporte *</label>
+                    <select class="form-select" id="transporte" name="transporte" required>
+                      <option value="Camión Exprés 01" selected>Camión Exprés 01 (Carga Pesada)</option>
+                      <option value="Furgón Logístico 02">Furgón Logístico 02</option>
+                      <option value="Unidad Rápida 03">Unidad Rápida 03</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
-              <div class="mb-4">
-                <label for="direccion_destinatario" class="form-label text-uppercase fw-bold small">Dirección de Entrega *</label>
-                <textarea class="form-control rounded-2" id="direccion_destinatario" name="direccion_destinatario" rows="2" required></textarea>
+              <!-- SECCIÓN 2: DATOS DEL REMITENTE -->
+              <div class="p-3 bg-light rounded-3 mb-4 border">
+                <h5 class="fw-bold text-dark mb-3">
+                  <i class="fa-solid fa-user me-2"></i>2. Datos del Remitente (Cliente)
+                </h5>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label for="nombre_remitente" class="form-label fw-bold small">Nombre Completo *</label>
+                    <input type="text" class="form-control" id="nombre_remitente" name="nombre_remitente" value="{{ user.get_full_name|default:user.username }}" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="telefono_remitente" class="form-label fw-bold small">Teléfono de Contacto *</label>
+                    <input type="text" class="form-control" id="telefono_remitente" name="telefono_remitente" placeholder="Ej: 0991234567" required>
+                  </div>
+                  <div class="col-12">
+                    <label for="direccion_remitente" class="form-label fw-bold small">Dirección de Origen / Recogida *</label>
+                    <textarea class="form-control" id="direccion_remitente" name="direccion_remitente" rows="2" placeholder="Ej: Av. 10 de Agosto y Quito, Latacunga" required></textarea>
+                  </div>
+                </div>
               </div>
 
-              <hr class="my-4">
-
-              <h5 class="fw-bold text-uppercase mb-3 text-dark">Detalles del Paquete</h5>
-
-              <div class="mb-3">
-                <label for="descripcion" class="form-label text-uppercase fw-bold small">Descripción del contenido *</label>
-                <textarea class="form-control rounded-2" id="descripcion" name="descripcion" rows="2" required></textarea>
+              <!-- SECCIÓN 3: DATOS DEL DESTINO Y DESTINATARIO -->
+              <div class="p-3 bg-light rounded-3 mb-4 border">
+                <h5 class="fw-bold text-success mb-3">
+                  <i class="fa-solid fa-map-location-dot me-2"></i>3. Datos de Destino y Destinatario
+                </h5>
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label for="ciudad_destino" class="form-label fw-bold small">Ciudad de Destino *</label>
+                    <input type="text" class="form-control" id="ciudad_destino" name="ciudad_destino" placeholder="Ej: Quito, Guayaquil, Cuenca, Ambato" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="nombre_destinatario" class="form-label fw-bold small">Nombre Completo del Destinatario *</label>
+                    <input type="text" class="form-control" id="nombre_destinatario" name="nombre_destinatario" placeholder="Nombre de quien recibe" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="telefono_destinatario" class="form-label fw-bold small">Teléfono del Destinatario *</label>
+                    <input type="text" class="form-control" id="telefono_destinatario" name="telefono_destinatario" placeholder="Ej: 0987654321" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="correo_destinatario" class="form-label fw-bold small">Correo Electrónico (Para Notificaciones)</label>
+                    <input type="email" class="form-control" id="correo_destinatario" name="correo_destinatario" placeholder="destinatario@ejemplo.com">
+                  </div>
+                  <div class="col-12">
+                    <label for="direccion_destinatario" class="form-label fw-bold small">Dirección Exacta de Entrega *</label>
+                    <textarea class="form-control" id="direccion_destinatario" name="direccion_destinatario" rows="2" placeholder="Ej: Av. Amazonas N34-12 y Naciones Unidas" required></textarea>
+                  </div>
+                </div>
               </div>
 
-              <div class="row mb-3">
-                <div class="col-md-4">
-                  <label for="peso" class="form-label text-uppercase fw-bold small">Peso (kg) *</label>
-                  <input type="number" step="0.01" class="form-control rounded-2" id="peso" name="peso" required>
-                </div>
-                <div class="col-md-4">
-                  <label for="dimensiones" class="form-label text-uppercase fw-bold small">Dimensiones</label>
-                  <input type="text" class="form-control rounded-2" id="dimensiones" name="dimensiones" placeholder="30x20x15 cm">
-                </div>
-                <div class="col-md-4">
-                  <label for="costo" class="form-label text-uppercase fw-bold small">Costo ($)</label>
-                  <input type="number" step="0.01" class="form-control rounded-2" id="costo" name="costo" value="0">
+              <!-- SECCIÓN 4: DETALLES DE LA ENCOMIENDA -->
+              <div class="p-3 bg-light rounded-3 mb-4 border">
+                <h5 class="fw-bold text-warning text-dark mb-3">
+                  <i class="fa-solid fa-cube me-2"></i>4. Especificaciones del Paquete
+                </h5>
+                <div class="row g-3">
+                  <div class="col-12">
+                    <label for="descripcion" class="form-label fw-bold small">Descripción del Contenido *</label>
+                    <textarea class="form-control" id="descripcion" name="descripcion" rows="2" placeholder="Ej: Caja con documentos importantes y repuestos electrónicos" required></textarea>
+                  </div>
+                  <div class="col-md-3">
+                    <label for="peso" class="form-label fw-bold small">Peso (kg) *</label>
+                    <input type="number" step="0.1" min="0.1" class="form-control" id="peso" name="peso" placeholder="Ej: 2.5" required>
+                  </div>
+                  <div class="col-md-3">
+                    <label for="dimensiones" class="form-label fw-bold small">Dimensiones (cm)</label>
+                    <input type="text" class="form-control" id="dimensiones" name="dimensiones" placeholder="Ej: 30x20x15">
+                  </div>
+                  <div class="col-md-3">
+                    <label for="costo" class="form-label fw-bold small">Costo del Envío ($) *</label>
+                    <input type="number" step="0.5" min="1" class="form-control" id="costo" name="costo" value="5.00" required>
+                  </div>
+                  <div class="col-md-3">
+                    <label for="hora_estimada_llegada" class="form-label fw-bold small">Estimación de Llegada (ETA)</label>
+                    <input type="datetime-local" class="form-control" id="hora_estimada_llegada" name="hora_estimada_llegada">
+                  </div>
                 </div>
               </div>
 
               <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                <a href="{% url 'mis_envios' %}" class="btn btn-outline-secondary btn-lg px-4">Cancelar</a>
-                <button type="submit" class="btn btn-dark btn-lg px-4 text-uppercase fw-bold">Registrar Envío</button>
+                <a href="{% url 'inicio' %}" class="btn btn-outline-secondary btn-lg px-4 me-md-2 fw-bold">
+                  <i class="fa-solid fa-xmark me-1"></i> Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary btn-lg px-5 fw-bold text-uppercase shadow-sm">
+                  <i class="fa-solid fa-paper-plane me-2"></i> Registrar Encomienda
+                </button>
               </div>
 
             </form>
@@ -92,4 +150,91 @@
     </div>
   </div>
 </section>
+
+<!-- SCRIPT DE JQUERY VALIDATION Y SWEETALERT2 -->
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    // Reglas de jQuery Validation
+    $("#formCrearEnvio").validate({
+      rules: {
+        origen: "required",
+        oficina: "required",
+        transporte: "required",
+        nombre_remitente: "required",
+        telefono_remitente: {
+          required: true,
+          minlength: 7,
+          maxlength: 15
+        },
+        direccion_remitente: "required",
+        ciudad_destino: "required",
+        nombre_destinatario: "required",
+        telefono_destinatario: {
+          required: true,
+          minlength: 7,
+          maxlength: 15
+        },
+        correo_destinatario: {
+          email: true
+        },
+        direccion_destinatario: "required",
+        descripcion: "required",
+        peso: {
+          required: true,
+          number: true,
+          min: 0.1
+        },
+        costo: {
+          required: true,
+          number: true,
+          min: 0
+        }
+      },
+      messages: {
+        origen: "Ingresa la ciudad de origen.",
+        nombre_remitente: "Ingresa el nombre del remitente.",
+        telefono_remitente: {
+          required: "Ingresa el teléfono del remitente.",
+          minlength: "El teléfono debe tener al menos 7 dígitos."
+        },
+        direccion_remitente: "Ingresa la dirección de origen.",
+        ciudad_destino: "Ingresa la ciudad de destino.",
+        nombre_destinatario: "Ingresa el nombre del destinatario.",
+        telefono_destinatario: {
+          required: "Ingresa el teléfono del destinatario.",
+          minlength: "El teléfono debe tener al menos 7 dígitos."
+        },
+        correo_destinatario: "Ingresa un correo electrónico válido.",
+        direccion_destinatario: "Ingresa la dirección exacta de entrega.",
+        descripcion: "Describe el contenido del paquete.",
+        peso: "Ingresa un peso válido mayor a 0 kg.",
+        costo: "Ingresa un costo válido mayor o igual a $0."
+      },
+      errorElement: "span",
+      errorClass: "text-danger small mt-1 d-block",
+      highlight: function(element) {
+        $(element).addClass("is-invalid").removeClass("is-valid");
+      },
+      unhighlight: function(element) {
+        $(element).removeClass("is-invalid").addClass("is-valid");
+      },
+      submitHandler: function(form) {
+        Swal.fire({
+          title: '¿Confirmar registro de encomienda?',
+          text: "Se registrará la guía en el sistema Servientrega.",
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonColor: '#0d6efd',
+          cancelButtonColor: '#6c757d',
+          confirmButtonText: '<i class="fa-solid fa-check me-1"></i> Sí, Registrar',
+          cancelButtonText: 'Revisar Datos'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            form.submit();
+          }
+        });
+      }
+    });
+  });
+</script>
 {% endblock %}

@@ -17,10 +17,18 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <!-- Librerías Locales (Funciona 100% sin Internet) -->
+    <link rel="stylesheet" href="{% static 'css/dataTables.bootstrap5.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/sweetalert2.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/all.min.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
 
     <!-- scripts con static -->
     <script src="{% static 'js/modernizr.js' %}"></script>
   </head>
+
   <body data-bs-spy="scroll" data-bs-target="#navbar" data-bs-root-margin="0px 0px -40%" data-bs-smooth-scroll="true" tabindex="0">
 
     <!-- ====== SPRITES / SVG ====== -->
@@ -87,9 +95,13 @@
         <div class="container-fluid">
 
         
-          <a class="navbar-brand" href="{% url 'inicio' %}">
-            <img src="{% static 'images/main-logo.png' %}" class="logo" alt="NEXORA EXPRESS">
+          <a class="navbar-brand text-decoration-none" href="{% url 'inicio' %}">
+            <span class="fs-3 fw-bold text-dark text-uppercase d-inline-flex align-items-center gap-2">
+              <i class="fa-solid fa-truck-fast text-primary"></i>
+              <span>NEXORA<span class="text-primary">.EXPRESS</span></span>
+            </span>
           </a>
+
 
           <button class="navbar-toggler d-flex d-lg-none order-3 p-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#bdNavbar" aria-controls="bdNavbar" aria-expanded="false" aria-label="Toggle navigation">
             <svg class="navbar-icon"><use xlink:href="#navbar-icon"></use></svg>
@@ -97,9 +109,13 @@
 
           <div class="offcanvas offcanvas-end" tabindex="-1" id="bdNavbar" aria-labelledby="bdNavbarOffcanvasLabel">
             <div class="offcanvas-header px-4 pb-0">
-              <a class="navbar-brand" href="{% url 'inicio' %}">
-                <img src="{% static 'images/main-logo.png' %}" class="logo" alt="NEXORA EXPRESS">
+              <a class="navbar-brand text-decoration-none" href="{% url 'inicio' %}">
+                <span class="fs-3 fw-bold text-dark text-uppercase d-inline-flex align-items-center gap-2">
+                  <i class="fa-solid fa-truck-fast text-primary"></i>
+                  <span>NEXORA<span class="text-primary">.EXPRESS</span></span>
+                </span>
               </a>
+
               <button type="button" class="btn-close btn-close-black" data-bs-dismiss="offcanvas" aria-label="Close" data-bs-target="#bdNavbar"></button>
             </div>
             <div class="offcanvas-body">
@@ -166,8 +182,12 @@
 
               <div class="col-lg-3 col-sm-6 pb-3">
                 <div class="footer-menu">
-                  <img src="{% static 'images/main-logo.png' %}" alt="logo">
-                  <p>Nisi, purus vitae, ultrices nunc. Sit ac sit suscipit hendrerit. Gravida massa volutpat aenean odio erat nullam fringilla.</p>
+                  <span class="fs-3 fw-bold text-dark text-uppercase d-inline-flex align-items-center gap-2 mb-3">
+                    <i class="fa-solid fa-truck-fast text-primary"></i>
+                    <span>NEXORA<span class="text-primary">.EXPRESS</span></span>
+                  </span>
+                  <p>Sistema de logística y encomiendas rápido, seguro y confiable con origen Latacunga y cobertura a nivel nacional.</p>
+
                   <div class="social-links">
                     <ul class="d-flex list-unstyled">
                       <li><a href="#"><svg class="facebook"><use xlink:href="#facebook"/></svg></a></li>
@@ -249,7 +269,7 @@
 
           <div class="col-md-4 col-sm-6">
             <div class="copyright">
-              <p>© Copyright 2023 MiniStore. Design by <a href="https://templatesjungle.com/">TemplatesJungle</a> Distribution by <a href="https://themewagon.com">ThemeWagon</a></p>
+              <p>© Copyright 2026 NEXORA EXPRESS. Todos los derechos reservados.</p>
             </div>
           </div>
 
@@ -263,5 +283,30 @@
     <script type="text/javascript" src="{% static 'js/plugins.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/script.js' %}"></script>
 
+    <!-- Librerías JS Locales (Funciona 100% sin Internet) -->
+    <script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'js/dataTables.bootstrap5.min.js' %}"></script>
+    <script src="{% static 'js/jquery.validate.min.js' %}"></script>
+    <script src="{% static 'js/messages_es.min.js' %}"></script>
+    <script src="{% static 'js/sweetalert2.all.min.js' %}"></script>
+
+    <!-- SweetAlert2 Handler for Django Flash Messages -->
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        {% if messages %}
+          {% for message in messages %}
+            Swal.fire({
+              icon: "{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% elif message.tags == 'info' %}info{% else %}success{% endif %}",
+              title: "{% if message.tags == 'error' %}Atención{% elif message.tags == 'warning' %}Advertencia{% else %}NEXORA EXPRESS{% endif %}",
+              text: "{{ message|escapejs }}",
+              confirmButtonColor: '#0d6efd',
+              timer: 6000,
+              timerProgressBar: true
+            });
+          {% endfor %}
+        {% endif %}
+      });
+    </script>
+
   </body>
-</html>
+</html>

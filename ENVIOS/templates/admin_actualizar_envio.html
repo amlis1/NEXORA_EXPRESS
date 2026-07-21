@@ -3,100 +3,99 @@
 
 {% block contenido %}
 <section class="padding-medium">
-  <div class="container my-5">
+  <div class="container my-4">
     <div class="row justify-content-center">
-      <div class="col-lg-8">
+      <div class="col-lg-9">
         
         <div class="d-flex justify-content-between align-items-center mb-4">
           <div>
-            <h3 class="fw-bold text-uppercase">Actualizar Envío</h3>
-            <p class="text-muted mb-0">Tracking: <strong>{{ envio.numero_tracking }}</strong></p>
+            <h3 class="fw-bold text-uppercase mb-1">
+              <i class="fa-solid fa-pen-to-square text-warning me-2"></i>Actualizar Estado de Encomienda
+            </h3>
+            <p class="text-muted mb-0">Guía de Tracking: <strong class="text-primary fs-5">{{ envio.numero_tracking }}</strong></p>
           </div>
-          <a href="{% url 'admin_envios' %}" class="btn btn-outline-secondary btn-sm">
-            ← Volver
+          <a href="{% url 'admin_envios' %}" class="btn btn-outline-secondary fw-bold">
+            <i class="fa-solid fa-arrow-left me-1"></i> Volver a la Lista
           </a>
         </div>
 
-        <div class="card border-0 shadow-lg rounded-3">
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+          <div class="card-header bg-dark text-white p-3">
+            <h5 class="mb-0 fw-bold fs-6">
+              <i class="fa-solid fa-route me-2"></i>Información General de la Carga
+            </h5>
+          </div>
+          
           <div class="card-body p-4 p-md-5">
             
-            <div class="row mb-4">
+            <div class="row g-3 mb-4">
               <div class="col-md-6">
-                <h6 class="text-uppercase fw-bold text-muted">Remitente</h6>
-                <p class="mb-0"><strong>{{ envio.nombre_remitente }}</strong></p>
-                <p class="text-muted small mb-0">{{ envio.telefono_remitente }}</p>
-                <p class="text-muted small">{{ envio.direccion_remitente }}</p>
+                <div class="p-3 bg-light rounded-3 border">
+                  <h6 class="text-uppercase fw-bold text-primary mb-2">Origen y Remitente</h6>
+                  <p class="mb-1"><strong>Origen:</strong> <span class="badge bg-secondary">{{ envio.origen }}</span> ({{ envio.oficina }})</p>
+                  <p class="mb-1"><strong>Remitente:</strong> {{ envio.nombre_remitente }}</p>
+                  <p class="mb-0 text-muted small"><i class="fa-solid fa-phone me-1"></i>{{ envio.telefono_remitente }} | {{ envio.direccion_remitente }}</p>
+                </div>
               </div>
+              
               <div class="col-md-6">
-                <h6 class="text-uppercase fw-bold text-muted">Destinatario</h6>
-                <p class="mb-0"><strong>{{ envio.nombre_destinatario }}</strong></p>
-                <p class="text-muted small mb-0">{{ envio.telefono_destinatario }}</p>
-                <p class="text-muted small">{{ envio.direccion_destinatario }}</p>
+                <div class="p-3 bg-light rounded-3 border">
+                  <h6 class="text-uppercase fw-bold text-success mb-2">Destino y Destinatario</h6>
+                  <p class="mb-1"><strong>Destino:</strong> <span class="badge bg-success">{{ envio.ciudad_destino }}</span></p>
+                  <p class="mb-1"><strong>Destinatario:</strong> {{ envio.nombre_destinatario }}</p>
+                  <p class="mb-0 text-muted small"><i class="fa-solid fa-location-dot me-1"></i>{{ envio.direccion_destinatario }}</p>
+                </div>
               </div>
             </div>
 
-            <hr>
+            <hr class="my-4">
 
-            <div class="row mb-4">
-              <div class="col-md-4">
-                <h6 class="text-uppercase fw-bold text-muted">Descripción</h6>
-                <p class="mb-0">{{ envio.descripcion }}</p>
-              </div>
-              <div class="col-md-2">
-                <h6 class="text-uppercase fw-bold text-muted">Peso</h6>
-                <p class="mb-0">{{ envio.peso }} kg</p>
-              </div>
-              <div class="col-md-3">
-                <h6 class="text-uppercase fw-bold text-muted">Dimensiones</h6>
-                <p class="mb-0">{{ envio.dimensiones|default:"N/A" }}</p>
-              </div>
-              <div class="col-md-3">
-                <h6 class="text-uppercase fw-bold text-muted">Costo</h6>
-                <p class="mb-0">${{ envio.costo }}</p>
-              </div>
-            </div>
-
-            <hr>
-
-            <h5 class="fw-bold text-uppercase mb-3">Actualizar Estado</h5>
-
-            <form method="post" action="{% url 'admin_actualizar_envio' envio.id %}">
+            <form id="formActualizarEnvio" method="post" action="{% url 'admin_actualizar_envio' envio.id %}">
               {% csrf_token %}
 
-              <div class="row mb-3">
+              <h5 class="fw-bold text-dark mb-3">
+                <i class="fa-solid fa-sliders me-2"></i>Actualizar Datos de Seguimiento
+              </h5>
+
+              <div class="row g-3 mb-3">
+                
                 <div class="col-md-6">
-                  <label for="estado" class="form-label text-uppercase fw-bold small">Nuevo Estado *</label>
-                  <select class="form-select rounded-2" id="estado" name="estado" required>
-                    <option value="pendiente" {% if envio.estado == 'pendiente' %}selected{% endif %}>Pendiente</option>
-                    <option value="en_transito" {% if envio.estado == 'en_transito' %}selected{% endif %}>En Tránsito</option>
-                    <option value="entregado" {% if envio.estado == 'entregado' %}selected{% endif %}>Entregado</option>
-                    <option value="cancelado" {% if envio.estado == 'cancelado' %}selected{% endif %}>Cancelado</option>
+                  <label for="estado" class="form-label fw-bold small">Nuevo Estado del Envío *</label>
+                  <select class="form-select form-select-lg fs-6 fw-bold" id="estado" name="estado" required>
+                    <option value="pendiente" {% if envio.estado == 'pendiente' %}selected{% endif %}>🕒 Pendiente (En Oficina)</option>
+                    <option value="en_transito" {% if envio.estado == 'en_transito' %}selected{% endif %}>🚚 En Tránsito (En Camino)</option>
+                    <option value="entregado" {% if envio.estado == 'entregado' %}selected{% endif %}>✅ Entregado (Al Destinatario)</option>
+                    <option value="cancelado" {% if envio.estado == 'cancelado' %}selected{% endif %}>❌ Cancelado</option>
                   </select>
                 </div>
+
                 <div class="col-md-6">
-                  <label class="form-label text-uppercase fw-bold small">Estado Actual</label>
-                  <div class="pt-2">
-                    {% if envio.estado == 'pendiente' %}
-                      <span class="badge bg-warning text-dark fs-6">Pendiente</span>
-                    {% elif envio.estado == 'en_transito' %}
-                      <span class="badge bg-info fs-6">En Tránsito</span>
-                    {% elif envio.estado == 'entregado' %}
-                      <span class="badge bg-success fs-6">Entregado</span>
-                    {% elif envio.estado == 'cancelado' %}
-                      <span class="badge bg-danger fs-6">Cancelado</span>
-                    {% endif %}
-                  </div>
+                  <label for="transporte" class="form-label fw-bold small">Unidad de Transporte</label>
+                  <input type="text" class="form-control form-control-lg fs-6" id="transporte" name="transporte" value="{{ envio.transporte }}" placeholder="Ej: Camión Exprés 01">
                 </div>
+
+                <div class="col-md-6">
+                  <label for="ubicacion_actual" class="form-label fw-bold small">Ubicación Actual de la Encomienda *</label>
+                  <input type="text" class="form-control form-control-lg fs-6" id="ubicacion_actual" name="ubicacion_actual" value="{{ envio.ubicacion_actual }}" placeholder="Ej: Peaje Alóag, Rumbo a Quito" required>
+                </div>
+
+                <div class="col-md-6">
+                  <label for="hora_estimada_llegada" class="form-label fw-bold small">Nueva Estimación de Llegada (ETA)</label>
+                  <input type="datetime-local" class="form-control form-control-lg fs-6" id="hora_estimada_llegada" name="hora_estimada_llegada" value="{{ envio.hora_estimada_llegada|date:'Y-m-d\TH:i' }}">
+                </div>
+
+                <div class="col-12">
+                  <label for="observaciones" class="form-label fw-bold small">Observaciones / Novedades de Entrega</label>
+                  <textarea class="form-control" id="observaciones" name="observaciones" rows="3" placeholder="Ej: Paquete recibido en bodega secundara sin novedadaes.">{{ envio.observaciones }}</textarea>
+                </div>
+
               </div>
 
-              <div class="mb-4">
-                <label for="observaciones" class="form-label text-uppercase fw-bold small">Observaciones</label>
-                <textarea class="form-control rounded-2" id="observaciones" name="observaciones" rows="3">{{ envio.observaciones }}</textarea>
-              </div>
-
-              <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                <a href="{% url 'admin_envios' %}" class="btn btn-outline-secondary btn-lg px-4">Cancelar</a>
-                <button type="submit" class="btn btn-dark btn-lg px-4 text-uppercase fw-bold">Guardar Cambios</button>
+              <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                <a href="{% url 'admin_envios' %}" class="btn btn-outline-secondary btn-lg px-4 me-md-2 fw-bold">Cancelar</a>
+                <button type="submit" class="btn btn-warning btn-lg px-5 fw-bold text-uppercase shadow-sm">
+                  <i class="fa-solid fa-floppy-disk me-2"></i> Guardar Cambios
+                </button>
               </div>
 
             </form>
@@ -108,4 +107,30 @@
     </div>
   </div>
 </section>
+
+<!-- SCRIPT DE CONFIRMACIÓN CON SWEETALERT2 -->
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    $("#formActualizarEnvio").on("submit", function(e) {
+      e.preventDefault();
+      var form = this;
+      var estadoTexto = $("#estado option:selected").text();
+
+      Swal.fire({
+        title: '¿Guardar cambios?',
+        text: "El nuevo estado del paquete cambiará a: " + estadoTexto,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ffc107',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, Guardar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          form.submit();
+        }
+      });
+    });
+  });
+</script>
 {% endblock %}
