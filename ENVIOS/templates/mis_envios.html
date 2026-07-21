@@ -1,0 +1,70 @@
+{% extends 'PlantillaGeneral.html' %}
+{% load static %}
+
+{% block contenido %}
+<section class="padding-medium">
+  <div class="container my-5">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h3 class="fw-bold text-uppercase">Mis Envíos</h3>
+        <p class="text-muted mb-0">Historial de todos tus envíos realizados</p>
+      </div>
+      <a href="{% url 'crear_envio' %}" class="btn btn-dark text-uppercase fw-bold">
+        + Nuevo Envío
+      </a>
+    </div>
+
+    {% if envios %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle shadow-sm rounded-3 overflow-hidden">
+          <thead class="table-dark">
+            <tr>
+              <th>Tracking</th>
+              <th>Destinatario</th>
+              <th>Dirección</th>
+              <th>Estado</th>
+              <th>Costo</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for envio in envios %}
+              <tr>
+                <td><strong class="text-dark">{{ envio.numero_tracking }}</strong></td>
+                <td>{{ envio.nombre_destinatario }}</td>
+                <td class="text-muted small">{{ envio.direccion_destinatario|truncatewords:8 }}</td>
+                <td>
+                  {% if envio.estado == 'pendiente' %}
+                    <span class="badge bg-warning text-dark">Pendiente</span>
+                  {% elif envio.estado == 'en_transito' %}
+                    <span class="badge bg-info">En Tránsito</span>
+                  {% elif envio.estado == 'entregado' %}
+                    <span class="badge bg-success">Entregado</span>
+                  {% elif envio.estado == 'cancelado' %}
+                    <span class="badge bg-danger">Cancelado</span>
+                  {% endif %}
+                </td>
+                <td>${{ envio.costo }}</td>
+                <td class="text-muted small">{{ envio.fecha_creacion|date:"d/m/Y H:i" }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="text-center py-5">
+        <div class="mb-3">
+          <svg width="64" height="64" fill="currentColor" class="text-muted">
+            <use xlink:href="#cart-outline"></use>
+          </svg>
+        </div>
+        <h5 class="text-muted">No tienes envíos registrados</h5>
+        <p class="text-muted">Comienza creando tu primer envío</p>
+        <a href="{% url 'crear_envio' %}" class="btn btn-dark text-uppercase fw-bold mt-2">Crear Envío</a>
+      </div>
+    {% endif %}
+
+  </div>
+</section>
+{% endblock %}

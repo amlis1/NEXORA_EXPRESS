@@ -1,0 +1,95 @@
+{% extends 'PlantillaGeneral.html' %}
+{% load static %}
+
+{% block contenido %}
+<section class="padding-medium">
+  <div class="container my-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card border-0 shadow-lg rounded-3">
+          <div class="card-body p-4 p-md-5">
+            
+            <div class="text-center mb-4">
+              <h3 class="fw-bold text-uppercase">Crear Envío</h3>
+              <p class="text-muted">Completa los datos para registrar un nuevo envío</p>
+            </div>
+
+            <form method="post" action="{% url 'crear_envio' %}">
+              {% csrf_token %}
+
+              <h5 class="fw-bold text-uppercase mb-3 text-dark">Datos del Remitente</h5>
+              
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label for="nombre_remitente" class="form-label text-uppercase fw-bold small">Nombre Completo *</label>
+                  <input type="text" class="form-control rounded-2" id="nombre_remitente" name="nombre_remitente" required>
+                </div>
+                <div class="col-md-6">
+                  <label for="telefono_remitente" class="form-label text-uppercase fw-bold small">Teléfono *</label>
+                  <input type="text" class="form-control rounded-2" id="telefono_remitente" name="telefono_remitente" required>
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <label for="direccion_remitente" class="form-label text-uppercase fw-bold small">Dirección de Recogida *</label>
+                <textarea class="form-control rounded-2" id="direccion_remitente" name="direccion_remitente" rows="2" required></textarea>
+              </div>
+
+              <hr class="my-4">
+
+              <h5 class="fw-bold text-uppercase mb-3 text-dark">Datos del Destinatario</h5>
+              
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label for="nombre_destinatario" class="form-label text-uppercase fw-bold small">Nombre Completo *</label>
+                  <input type="text" class="form-control rounded-2" id="nombre_destinatario" name="nombre_destinatario" required>
+                </div>
+                <div class="col-md-6">
+                  <label for="telefono_destinatario" class="form-label text-uppercase fw-bold small">Teléfono *</label>
+                  <input type="text" class="form-control rounded-2" id="telefono_destinatario" name="telefono_destinatario" required>
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <label for="direccion_destinatario" class="form-label text-uppercase fw-bold small">Dirección de Entrega *</label>
+                <textarea class="form-control rounded-2" id="direccion_destinatario" name="direccion_destinatario" rows="2" required></textarea>
+              </div>
+
+              <hr class="my-4">
+
+              <h5 class="fw-bold text-uppercase mb-3 text-dark">Detalles del Paquete</h5>
+
+              <div class="mb-3">
+                <label for="descripcion" class="form-label text-uppercase fw-bold small">Descripción del contenido *</label>
+                <textarea class="form-control rounded-2" id="descripcion" name="descripcion" rows="2" required></textarea>
+              </div>
+
+              <div class="row mb-3">
+                <div class="col-md-4">
+                  <label for="peso" class="form-label text-uppercase fw-bold small">Peso (kg) *</label>
+                  <input type="number" step="0.01" class="form-control rounded-2" id="peso" name="peso" required>
+                </div>
+                <div class="col-md-4">
+                  <label for="dimensiones" class="form-label text-uppercase fw-bold small">Dimensiones</label>
+                  <input type="text" class="form-control rounded-2" id="dimensiones" name="dimensiones" placeholder="30x20x15 cm">
+                </div>
+                <div class="col-md-4">
+                  <label for="costo" class="form-label text-uppercase fw-bold small">Costo ($)</label>
+                  <input type="number" step="0.01" class="form-control rounded-2" id="costo" name="costo" value="0">
+                </div>
+              </div>
+
+              <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                <a href="{% url 'mis_envios' %}" class="btn btn-outline-secondary btn-lg px-4">Cancelar</a>
+                <button type="submit" class="btn btn-dark btn-lg px-4 text-uppercase fw-bold">Registrar Envío</button>
+              </div>
+
+            </form>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

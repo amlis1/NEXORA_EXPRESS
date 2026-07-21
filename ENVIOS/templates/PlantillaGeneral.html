@@ -106,8 +106,22 @@
               <ul id="navbar" class="navbar-nav text-uppercase justify-content-end align-items-center flex-grow-1 pe-3">
                 <li class="nav-item"><a class="nav-link me-4 active" href="{% url 'inicio' %}">Inicio</a></li>
                 {% if user.is_authenticated %}
+                  {% if user.profile.role == 'admin' %}
+                    <li class="nav-item">
+                      <a class="nav-link me-4" href="{% url 'admin_envios' %}">Gestionar Envíos</a>
+                    </li>
+                  {% elif user.profile.role == 'cliente' %}
+                    <li class="nav-item">
+                      <a class="nav-link me-4" href="{% url 'crear_envio' %}">Nuevo Envío</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link me-4" href="{% url 'mis_envios' %}">Mis Envíos</a>
+                    </li>
+                  {% endif %}
                   <li class="nav-item me-3 text-dark fw-bold text-lowercase">
-                    <span class="badge bg-secondary p-2 me-2">Usuario: {{ user.username }}</span>
+                    <span class="badge bg-secondary p-2 me-2">
+                      {% if user.profile.role == 'admin' %}Admin{% else %}Cliente{% endif %}: {{ user.username }}
+                    </span>
                   </li>
                   <li class="nav-item">
                     <a class="btn btn-outline-danger btn-sm text-uppercase me-4" href="{% url 'logout' %}">Cerrar Sesión</a>

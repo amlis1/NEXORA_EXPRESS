@@ -1,0 +1,84 @@
+{% extends 'PlantillaGeneral.html' %}
+{% load static %}
+
+{% block contenido %}
+<section class="padding-medium">
+  <div class="container my-5">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h3 class="fw-bold text-uppercase">Gestión de Envíos</h3>
+        <p class="text-muted mb-0">Panel de administración - Todos los envíos del sistema</p>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="{% url 'admin_envios' %}" class="btn {% if not estado_filtro %}btn-dark{% else %}btn-outline-dark{% endif %} btn-sm text-uppercase">Todos</a>
+        <a href="{% url 'admin_envios' %}?estado=pendiente" class="btn {% if estado_filtro == 'pendiente' %}btn-warning{% else %}btn-outline-warning{% endif %} btn-sm text-uppercase">Pendientes</a>
+        <a href="{% url 'admin_envios' %}?estado=en_transito" class="btn {% if estado_filtro == 'en_transito' %}btn-info{% else %}btn-outline-info{% endif %} btn-sm text-uppercase">En Tránsito</a>
+        <a href="{% url 'admin_envios' %}?estado=entregado" class="btn {% if estado_filtro == 'entregado' %}btn-success{% else %}btn-outline-success{% endif %} btn-sm text-uppercase">Entregados</a>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-3">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark">
+              <tr>
+                <th>Tracking</th>
+                <th>Remitente</th>
+                <th>Destinatario</th>
+                <th>Origen</th>
+                <th>Destino</th>
+                <th>Peso</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+                <th class="text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for envio in envios %}
+                <tr>
+                  <td><strong class="text-dark">{{ envio.numero_tracking }}</strong></td>
+                  <td>{{ envio.nombre_remitente }}</td>
+                  <td>{{ envio.nombre_destinatario }}</td>
+                  <td class="text-muted small">{{ envio.direccion_remitente|truncatewords:5 }}</td>
+                  <td class="text-muted small">{{ envio.direccion_destinatario|truncatewords:5 }}</td>
+                  <td>{{ envio.peso }} kg</td>
+                  <td>
+                    {% if envio.estado == 'pendiente' %}
+                      <span class="badge bg-warning text-dark">Pendiente</span>
+                    {% elif envio.estado == 'en_transito' %}
+                      <span class="badge bg-info">En Tránsito</span>
+                    {% elif envio.estado == 'entregado' %}
+                      <span class="badge bg-success">Entregado</span>
+                    {% elif envio.estado == 'cancelado' %}
+                      <span class="badge bg-danger">Cancelado</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-muted small">{{ envio.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                  <td class="text-center">
+                    <a href="{% url 'admin_actualizar_envio' envio.id %}" class="btn btn-outline-dark btn-sm">
+                      Actualizar
+                    </a>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="9" class="text-center py-4 text-muted">
+                    No se encontraron envíos{% if estado_filtro %} con estado "{{ estado_filtro }}"{% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-3 text-muted small">
+      Total de envíos: {{ envios|length }}
+    </div>
+
+  </div>
+</section>
+{% endblock %}
