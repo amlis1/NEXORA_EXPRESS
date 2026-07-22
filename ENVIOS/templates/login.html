@@ -15,7 +15,7 @@
               <p class="text-muted">Ingresa a tu cuenta de NEXORA EXPRESS</p>
             </div>
 
-            <form method="post" action="{% url 'login' %}">
+            <form id="formLogin" method="post" action="{% url 'login' %}">
               {% csrf_token %}
 
               <div class="form-group mb-3">
@@ -28,8 +28,11 @@
                 <input type="password" class="form-control form-control-lg rounded-2 ps-3" id="password" name="password" placeholder="••••••••" required>
               </div>
 
-              <div class="d-grid mb-3">
-                <button type="submit" class="btn btn-dark btn-lg text-uppercase fw-bold py-3">Ingresar</button>
+              <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-3">
+                <button type="button" onclick="history.back()" class="btn btn-outline-secondary btn-lg px-4 me-md-2 fw-bold">
+                  <i class="fa-solid fa-xmark me-1"></i> Cancelar
+                </button>
+                <button type="submit" class="btn btn-dark btn-lg px-5 text-uppercase fw-bold shadow-sm">Ingresar</button>
               </div>
 
             </form>
@@ -44,4 +47,55 @@
     </div>
   </div>
 </section>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    $("#formLogin").validate({
+      rules: {
+        username: {
+          required: true,
+          minlength: 3
+        },
+        password: {
+          required: true,
+          minlength: 6
+        }
+      },
+      messages: {
+        username: {
+          required: "Por favor, ingresa tu usuario.",
+          minlength: "El usuario debe tener al menos 3 caracteres."
+        },
+        password: {
+          required: "Por favor, ingresa tu contraseña.",
+          minlength: "La contraseña debe tener al menos 6 caracteres."
+        }
+      },
+      errorElement: "span",
+      errorClass: "text-danger small mt-1 d-block",
+      highlight: function(element) {
+        $(element).addClass("is-invalid").removeClass("is-valid");
+      },
+      unhighlight: function(element) {
+        $(element).removeClass("is-invalid").addClass("is-valid");
+      },
+      submitHandler: function(form) {
+        Swal.fire({
+          title: 'Iniciar Sesión',
+          text: "¿Deseas acceder a tu cuenta?",
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonColor: '#212529',
+          cancelButtonColor: '#6c757d',
+          confirmButtonText: '<i class="fa-solid fa-right-to-bracket me-1"></i> Sí, Ingresar',
+          cancelButtonText: 'Cancelar'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            form.submit();
+          }
+        });
+      }
+    });
+  });
+</script>
 {% endblock %}

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Reporte de Ingresos - {{ mes_actual }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11pt;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #0056b3;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: #0056b3;
+            margin: 0;
+            font-size: 20pt;
+        }
+        .summary-box {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .summary-box h2 {
+            margin: 0;
+            color: #198754;
+            font-size: 18pt;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 10pt;
+        }
+        .details-table th, .details-table td {
+            border: 1px solid #dee2e6;
+            padding: 8px;
+            text-align: left;
+        }
+        .details-table th {
+            background-color: #0056b3;
+            color: white;
+        }
+        .details-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 9pt;
+            color: #666;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>NEXORA EXPRESS</h1>
+        <p>Reporte de Ingresos por Encomiendas</p>
+    </div>
+
+    <div class="summary-box">
+        <strong>Mes de Reporte:</strong> {{ mes_actual }}<br>
+        <strong>Total de Envíos Registrados:</strong> {{ envios|length }}<br><br>
+        <h2>Total Recaudado: ${{ recaudado_mes|default:"0.00" }}</h2>
+    </div>
+
+    <table class="details-table">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Tracking</th>
+                <th>Remitente</th>
+                <th>Destino</th>
+                <th>Estado</th>
+                <th>Costo</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for envio in envios %}
+            <tr>
+                <td>{{ envio.fecha_creacion|date:"d/m/Y" }}</td>
+                <td>{{ envio.numero_tracking }}</td>
+                <td>{{ envio.nombre_remitente }}</td>
+                <td>{{ envio.ciudad_destino }}</td>
+                <td>{{ envio.get_estado_display }}</td>
+                <td>${{ envio.costo }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align: center;">No hay encomiendas registradas este mes.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        Documento generado automáticamente por el sistema administrativo NEXORA EXPRESS.<br>
+        Las cifras reflejadas corresponden al total facturado en base al costo de cada envío.
+    </div>
+
+</body>
+</html>

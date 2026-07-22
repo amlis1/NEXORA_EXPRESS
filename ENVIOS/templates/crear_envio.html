@@ -60,9 +60,32 @@
                   <i class="fa-solid fa-user me-2"></i>2. Datos del Remitente (Cliente)
                 </h5>
                 <div class="row g-3">
-                  <div class="col-md-6">
-                    <label for="nombre_remitente" class="form-label fw-bold small">Nombre Completo *</label>
-                    <input type="text" class="form-control" id="nombre_remitente" name="nombre_remitente" value="{{ user.get_full_name|default:user.username }}" required>
+                <div class="col-md-6">
+                    <label for="remitente_id" class="form-label fw-bold small">Remitente (Cliente) *</label>
+                    {% if user.profile.role == 'admin' %}
+                    <select class="form-select" id="remitente_id" name="remitente_id" required>
+                      <option value="" disabled selected>Selecciona un cliente...</option>
+                      {% for cliente in usuarios_clientes %}
+                      <option value="{{ cliente.id }}">{{ cliente.profile.get_display_name }} ({{ cliente.email|default:'Sin correo' }})</option>
+                      {% endfor %}
+                    </select>
+                    {% else %}
+                    <!-- Nombre completo visible (no editable) -->
+                    <div class="input-group">
+                      <input type="text" class="form-control bg-light fw-bold" id="nombre_remitente_display"
+                             value="{{ nombre_remitente_display }}" readonly
+                             title="Usuario interno: {{ user.username }}">
+                      <span class="input-group-text bg-light" data-bs-toggle="tooltip" data-bs-placement="top"
+                            title="Usuario del sistema: {{ user.username }}">
+                        <i class="fa-solid fa-user-shield text-secondary"></i>
+                      </span>
+                    </div>
+                    <div class="mt-1">
+                      <span class="badge bg-light text-secondary border small">
+                        <i class="fa-solid fa-lock me-1"></i>Usuario: <strong>{{ user.username }}</strong>
+                      </span>
+                    </div>
+                    {% endif %}
                   </div>
                   <div class="col-md-6">
                     <label for="telefono_remitente" class="form-label fw-bold small">Teléfono de Contacto *</label>
@@ -128,15 +151,16 @@
                   </div>
                   <div class="col-md-3">
                     <label for="hora_estimada_llegada" class="form-label fw-bold small">Estimación de Llegada (ETA)</label>
-                    <input type="datetime-local" class="form-control" id="hora_estimada_llegada" name="hora_estimada_llegada">
+                    <input type="datetime-local" class="form-control" id="hora_estimada_llegada" name="hora_estimada_llegada"
+                           min="">
                   </div>
                 </div>
               </div>
 
               <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                <a href="{% url 'inicio' %}" class="btn btn-outline-secondary btn-lg px-4 me-md-2 fw-bold">
+                <button type="button" onclick="history.back()" class="btn btn-outline-secondary btn-lg px-4 me-md-2 fw-bold">
                   <i class="fa-solid fa-xmark me-1"></i> Cancelar
-                </a>
+                </button>
                 <button type="submit" class="btn btn-primary btn-lg px-5 fw-bold text-uppercase shadow-sm">
                   <i class="fa-solid fa-paper-plane me-2"></i> Registrar Encomienda
                 </button>
@@ -154,31 +178,78 @@
 <!-- SCRIPT DE JQUERY VALIDATION Y SWEETALERT2 -->
 <script>
   document.addEventListener("DOMContentLoaded", function() {
+
+    // Establecer mínimo del campo ETA a mañana
+    var etaInput = document.getElementById('hora_estimada_llegada');
+    if (etaInput) {
+      var tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0);
+      var minStr = tomorrow.getFullYear() + '-' +
+                   String(tomorrow.getMonth() + 1).padStart(2, '0') + '-' +
+                   String(tomorrow.getDate()).padStart(2, '0') + 'T00:00';
+      etaInput.setAttribute('min', minStr);
+    }
+
+    // Validador personalizado: fecha mínima 1 día en el futuro
+    $.validator.addMethod("minDateTomorrow", function(value, element) {
+      if (!value) return true; // No es obligatorio
+      var inputDate = new Date(value);
+      var tomorrowVal = new Date();
+      tomorrowVal.setDate(tomorrowVal.getDate() + 1);
+      tomorrowVal.setHours(0, 0, 0, 0);
+      return inputDate >= tomorrowVal;
+    }, "La fecha estimada debe ser al menos 1 día en el futuro.");
+
+    // Validador: teléfono solo números, 7-15 dígitos
+    $.validator.addMethod("phoneEC", function(value, element) {
+      return this.optional(element) || /^\d{7,15}$/.test(value);
+    }, "Ingresa solo números (7 a 15 dígitos).");
+
     // Reglas de jQuery Validation
     $("#formCrearEnvio").validate({
       rules: {
-        origen: "required",
+        origen: {
+          required: true,
+          minlength: 2
+        },
         oficina: "required",
         transporte: "required",
-        nombre_remitente: "required",
+        {% if user.profile.role == 'admin' %}
+        remitente_id: "required",
+        {% endif %}
         telefono_remitente: {
           required: true,
-          minlength: 7,
-          maxlength: 15
+          phoneEC: true
         },
-        direccion_remitente: "required",
-        ciudad_destino: "required",
-        nombre_destinatario: "required",
+        direccion_remitente: {
+          required: true,
+          minlength: 5
+        },
+        ciudad_destino: {
+          required: true,
+          minlength: 2
+        },
+        nombre_destinatario: {
+          required: true,
+          minlength: 3
+        },
         telefono_destinatario: {
           required: true,
-          minlength: 7,
-          maxlength: 15
+          phoneEC: true
         },
         correo_destinatario: {
+          required: true,
           email: true
         },
-        direccion_destinatario: "required",
-        descripcion: "required",
+        direccion_destinatario: {
+          required: true,
+          minlength: 5
+        },
+        descripcion: {
+          required: true,
+          minlength: 5
+        },
         peso: {
           required: true,
           number: true,
@@ -187,28 +258,67 @@
         costo: {
           required: true,
           number: true,
-          min: 0
+          min: 1
+        },
+        hora_estimada_llegada: {
+          minDateTomorrow: true
         }
       },
       messages: {
-        origen: "Ingresa la ciudad de origen.",
-        nombre_remitente: "Ingresa el nombre del remitente.",
+        origen: {
+          required: "Ingresa la ciudad de origen.",
+          minlength: "La ciudad debe tener al menos 2 caracteres."
+        },
+        oficina: "Selecciona una oficina de despacho.",
+        transporte: "Selecciona una unidad de transporte.",
+        {% if user.profile.role == 'admin' %}
+        remitente_id: "Selecciona el cliente remitente de la lista.",
+        {% endif %}
         telefono_remitente: {
           required: "Ingresa el teléfono del remitente.",
-          minlength: "El teléfono debe tener al menos 7 dígitos."
+          phoneEC: "Ingresa solo números (7 a 15 dígitos)."
         },
-        direccion_remitente: "Ingresa la dirección de origen.",
-        ciudad_destino: "Ingresa la ciudad de destino.",
-        nombre_destinatario: "Ingresa el nombre del destinatario.",
+        direccion_remitente: {
+          required: "Ingresa la dirección de origen.",
+          minlength: "La dirección debe tener al menos 5 caracteres."
+        },
+        ciudad_destino: {
+          required: "Ingresa la ciudad de destino.",
+          minlength: "La ciudad debe tener al menos 2 caracteres."
+        },
+        nombre_destinatario: {
+          required: "Ingresa el nombre del destinatario.",
+          minlength: "El nombre debe tener al menos 3 caracteres."
+        },
         telefono_destinatario: {
           required: "Ingresa el teléfono del destinatario.",
-          minlength: "El teléfono debe tener al menos 7 dígitos."
+          phoneEC: "Ingresa solo números (7 a 15 dígitos)."
         },
-        correo_destinatario: "Ingresa un correo electrónico válido.",
-        direccion_destinatario: "Ingresa la dirección exacta de entrega.",
-        descripcion: "Describe el contenido del paquete.",
-        peso: "Ingresa un peso válido mayor a 0 kg.",
-        costo: "Ingresa un costo válido mayor o igual a $0."
+        correo_destinatario: {
+          required: "Ingresa el correo electrónico del destinatario.",
+          email: "Ingresa un correo electrónico válido (ej: usuario@dominio.com)."
+        },
+        direccion_destinatario: {
+          required: "Ingresa la dirección exacta de entrega.",
+          minlength: "La dirección debe tener al menos 5 caracteres."
+        },
+        descripcion: {
+          required: "Describe el contenido del paquete.",
+          minlength: "La descripción debe tener al menos 5 caracteres."
+        },
+        peso: {
+          required: "Ingresa el peso del paquete.",
+          number: "El peso debe ser un número válido.",
+          min: "El peso debe ser mayor a 0 kg."
+        },
+        costo: {
+          required: "Ingresa el costo del envío.",
+          number: "El costo debe ser un número válido.",
+          min: "El costo debe ser al menos $1."
+        },
+        hora_estimada_llegada: {
+          minDateTomorrow: "La fecha estimada debe ser al menos 1 día en el futuro."
+        }
       },
       errorElement: "span",
       errorClass: "text-danger small mt-1 d-block",
@@ -234,6 +344,12 @@
           }
         });
       }
+    });
+
+    // Inicializar tooltips de Bootstrap
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+      new bootstrap.Tooltip(tooltipTriggerEl);
     });
   });
 </script>

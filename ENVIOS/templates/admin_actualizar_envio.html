@@ -81,7 +81,7 @@
 
                 <div class="col-md-6">
                   <label for="hora_estimada_llegada" class="form-label fw-bold small">Nueva Estimación de Llegada (ETA)</label>
-                  <input type="datetime-local" class="form-control form-control-lg fs-6" id="hora_estimada_llegada" name="hora_estimada_llegada" value="{{ envio.hora_estimada_llegada|date:'Y-m-d\TH:i' }}">
+                  <input type="datetime-local" class="form-control form-control-lg fs-6" id="hora_estimada_llegada" name="hora_estimada_llegada" value="{{ envio.hora_estimada_llegada|date:'Y-m-d\TH:i' }}" min="">
                 </div>
 
                 <div class="col-12">
@@ -92,7 +92,7 @@
               </div>
 
               <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                <a href="{% url 'admin_envios' %}" class="btn btn-outline-secondary btn-lg px-4 me-md-2 fw-bold">Cancelar</a>
+                <button type="button" onclick="history.back()" class="btn btn-outline-secondary btn-lg px-4 me-md-2 fw-bold">Cancelar</button>
                 <button type="submit" class="btn btn-warning btn-lg px-5 fw-bold text-uppercase shadow-sm">
                   <i class="fa-solid fa-floppy-disk me-2"></i> Guardar Cambios
                 </button>
@@ -111,25 +111,84 @@
 <!-- SCRIPT DE CONFIRMACIÓN CON SWEETALERT2 -->
 <script>
   document.addEventListener("DOMContentLoaded", function() {
-    $("#formActualizarEnvio").on("submit", function(e) {
-      e.preventDefault();
-      var form = this;
-      var estadoTexto = $("#estado option:selected").text();
 
-      Swal.fire({
-        title: '¿Guardar cambios?',
-        text: "El nuevo estado del paquete cambiará a: " + estadoTexto,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#ffc107',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Sí, Guardar',
-        cancelButtonText: 'Cancelar'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          form.submit();
+    // Establecer mínimo del campo ETA a ahora
+    var etaInput = document.getElementById('hora_estimada_llegada');
+    if (etaInput && !etaInput.value) {
+      var now = new Date();
+      var minStr = now.getFullYear() + '-' +
+                   String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                   String(now.getDate()).padStart(2, '0') + 'T' +
+                   String(now.getHours()).padStart(2, '0') + ':' +
+                   String(now.getMinutes()).padStart(2, '0');
+      etaInput.setAttribute('min', minStr);
+    }
+
+    // Validador personalizado: fecha mínima ahora
+    $.validator.addMethod("minDateNow", function(value, element) {
+      if (!value) return true;
+      var inputDate = new Date(value);
+      var now = new Date();
+      return inputDate >= now;
+    }, "La fecha estimada no puede ser anterior a la fecha y hora actual.");
+
+    // Validador: teléfono solo números, 7-15 dígitos
+    $.validator.addMethod("phoneEC", function(value, element) {
+      return this.optional(element) || /^\d{7,15}$/.test(value);
+    }, "Ingresa solo números (7 a 15 dígitos).");
+
+    $("#formActualizarEnvio").validate({
+      rules: {
+        estado: "required",
+        ubicacion_actual: {
+          required: true,
+          minlength: 5
+        },
+        transporte: {
+          minlength: 3
+        },
+        hora_estimada_llegada: {
+          minDateNow: true
         }
-      });
+      },
+      messages: {
+        estado: "Por favor, selecciona un estado.",
+        ubicacion_actual: {
+          required: "Ingresa la ubicación actual de la encomienda.",
+          minlength: "La ubicación debe tener al menos 5 caracteres."
+        },
+        transporte: {
+          minlength: "El transporte debe tener al menos 3 caracteres."
+        },
+        hora_estimada_llegada: {
+          minDateNow: "La fecha estimada no puede ser anterior a la fecha y hora actual."
+        }
+      },
+      errorElement: "span",
+      errorClass: "text-danger small mt-1 d-block",
+      highlight: function(element) {
+        $(element).addClass("is-invalid").removeClass("is-valid");
+      },
+      unhighlight: function(element) {
+        $(element).removeClass("is-invalid").addClass("is-valid");
+      },
+      submitHandler: function(form) {
+        var estadoTexto = $("#estado option:selected").text();
+        Swal.fire({
+          title: '¿Guardar cambios?',
+          text: "El nuevo estado del paquete cambiará a: " + estadoTexto,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#ffc107',
+          cancelButtonColor: '#6c757d',
+          confirmButtonText: 'Sí, Guardar',
+          cancelButtonText: 'Cancelar'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            form.submit();
+          }
+        });
+      }
     });
   });
 </script>

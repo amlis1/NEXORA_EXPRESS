@@ -68,9 +68,14 @@
                     </td>
                     <td class="fw-bold text-success">${{ envio.costo }}</td>
                     <td>
-                      <a href="{% url 'rastrear_envio_codigo' envio.numero_tracking %}" class="btn btn-outline-primary btn-sm fw-bold rounded-pill">
-                        <i class="fa-solid fa-eye me-1"></i> Rastrear
-                      </a>
+                      <div class="d-flex gap-1 flex-wrap">
+                        <a href="{% url 'rastrear_envio_codigo' envio.numero_tracking %}" class="btn btn-outline-primary btn-sm fw-bold rounded-pill">
+                          <i class="fa-solid fa-eye me-1"></i> Rastrear
+                        </a>
+                        <a href="{% url 'descargar_guia_pdf' envio.numero_tracking %}" class="btn btn-outline-dark btn-sm fw-bold rounded-pill" target="_blank" title="Descargar guía PDF">
+                          <i class="fa-solid fa-file-pdf me-1"></i> PDF
+                        </a>
+                      </div>
                     </td>
                   </tr>
                 {% endfor %}

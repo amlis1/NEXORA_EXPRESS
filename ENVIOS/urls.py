@@ -12,5 +12,8 @@ urlpatterns = [
     path("rastrear/<str:tracking_code>/", views.rastrear_envio, name="rastrear_envio_codigo"),
     path("panel/envios/", views.admin_envios, name="admin_envios"),
     path("panel/envio/<int:envio_id>/actualizar/", views.admin_actualizar_envio, name="admin_actualizar_envio"),
+    path("panel/envio/<int:envio_id>/reenviar/", views.reenviar_guia, name="reenviar_guia"),
+    path("pdf/<str:tracking_code>/", views.descargar_guia_pdf, name="descargar_guia_pdf"),
+    path("panel/reporte-ingresos/", views.reporte_ingresos_pdf, name="reporte_ingresos_pdf"),
 ]
 

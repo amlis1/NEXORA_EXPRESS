@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Guia de Envio - {{ envio.numero_tracking }}</title>
+    <style>
+        @page { size: A4; margin: 1.5cm 1.8cm; }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 10.5pt;
+            color: #1a1a2e;
+            margin: 0; padding: 0;
+        }
+
+        /* HEADER */
+        .header-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+        .header-left { background: #0d1b2a; color: white; padding: 14px 18px; width: 60%; vertical-align: middle; }
+        .header-right { background: #1b263b; color: white; padding: 14px 18px; width: 40%; vertical-align: middle; text-align: right; }
+        .brand { font-size: 22pt; font-weight: bold; letter-spacing: 2px; margin: 0; }
+        .brand-sub { font-size: 8pt; color: #90b4e8; margin: 3px 0 0 0; }
+        .track-num { font-size: 13pt; font-weight: bold; color: #ffd60a; }
+        .track-lbl { font-size: 8pt; color: #90b4e8; text-transform: uppercase; margin: 0; }
+
+        /* STATUS */
+        .status-bar {
+            background: #f0f4f8;
+            border: 1px solid #dee2e6;
+            border-left: 5px solid #0d6efd;
+            padding: 7px 12px;
+            margin-bottom: 12px;
+            font-size: 10pt;
+        }
+
+        /* SECTIONS */
+        .section-box { border: 1px solid #dee2e6; margin-bottom: 12px; }
+        .section-head { padding: 6px 10px; font-size: 8.5pt; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: white; }
+        .sh-dark  { background: #0d1b2a; }
+        .sh-green { background: #157347; }
+        .sh-blue  { background: #0d6efd; }
+        .sh-gray  { background: #495057; }
+
+        .info-table { width: 100%; border-collapse: collapse; }
+        .info-table tr:nth-child(even) td { background: #f8f9fa; }
+        .info-table td { padding: 5px 9px; font-size: 9.5pt; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+        .lbl { font-weight: bold; color: #495057; }
+
+        /* QR + OBS side-by-side using HTML table */
+        .qr-obs-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+        .qr-cell { width: 165px; vertical-align: top; padding-right: 10px; text-align: center; }
+        .qr-border { border: 2px solid #0d6efd; padding: 6px; display: inline-block; }
+        .qr-border img { width: 130px; height: 130px; display: block; }
+        .qr-cap { font-size: 7.5pt; color: #6c757d; margin-top: 4px; }
+        .obs-cell { vertical-align: top; }
+
+        /* FOOTER */
+        .doc-footer { margin-top: 12px; padding-top: 7px; border-top: 2px solid #0d6efd; text-align: center; font-size: 8pt; color: #6c757d; }
+
+        /* CUT LINE */
+        .cut-wrap { margin: 16px 0 8px; text-align: center; }
+        .cut-line { border-top: 2px dashed #adb5bd; margin-bottom: 0; }
+        .cut-lbl { font-size: 7.5pt; color: #adb5bd; background: white; padding: 0 8px; }
+
+        /* LABEL STICKER */
+        .sticker { border: 2px solid #0d1b2a; padding: 8px 12px; }
+        .sticker-inner { width: 100%; border-collapse: collapse; }
+        .sticker-from { width: 50%; vertical-align: top; padding: 4px 8px 4px 0; border-right: 1px solid #dee2e6; }
+        .sticker-to   { width: 50%; vertical-align: top; padding: 4px 0 4px 10px; }
+        .sticker-lft  { font-size: 8pt; text-transform: uppercase; color: #6c757d; font-weight: bold; margin: 0 0 2px 0; }
+        .sticker-val  { font-size: 10pt; font-weight: bold; color: #0d1b2a; margin: 0 0 2px 0; }
+        .sticker-sub  { font-size: 8.5pt; color: #495057; margin: 1px 0; }
+        .sticker-code { text-align: center; padding-top: 7px; border-top: 1px solid #dee2e6; margin-top: 5px; font-size: 12pt; font-weight: bold; letter-spacing: 2px; }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <table class="header-table">
+        <tr>
+            <td class="header-left">
+                <p class="brand">NEXORA<span style="color:#60a5fa;">.EXPRESS</span></p>
+                <p class="brand-sub">Sistema de Logistica y Encomiendas &mdash; Latacunga, Ecuador</p>
+            </td>
+            <td class="header-right">
+                <p class="track-lbl">Codigo de Rastreo</p>
+                <p class="track-num">{{ envio.numero_tracking }}</p>
+                <p class="track-lbl">Emitido: {{ envio.fecha_creacion|date:"d/m/Y H:i" }}</p>
+            </td>
+        </tr>
+    </table>
+
+    <!-- STATUS BAR -->
+    <div class="status-bar">
+        <strong>Estado:</strong> {{ envio.get_estado_display }}
+        &nbsp;&nbsp;|&nbsp;&nbsp;
+        <strong>Ubicacion:</strong> {{ envio.ubicacion_actual }}
+        {% if envio.hora_estimada_llegada %}
+        &nbsp;&nbsp;|&nbsp;&nbsp;
+        <strong>ETA:</strong> {{ envio.hora_estimada_llegada|date:"d/m/Y H:i" }}
+        {% endif %}
+    </div>
+
+    <!-- ORIGEN + DESTINO (columnas via tabla HTML) -->
+    <table style="width:100%; border-collapse:collapse; margin-bottom:12px;">
+        <tr>
+            <!-- REMITENTE -->
+            <td style="width:50%; vertical-align:top; padding-right:6px;">
+                <div class="section-box">
+                    <div class="section-head sh-dark">Datos de Origen y Remitente</div>
+                    <table class="info-table">
+                        <tr><td class="lbl">Ciudad Origen:</td><td>{{ envio.origen }}</td></tr>
+                        <tr><td class="lbl">Oficina:</td><td>{{ envio.oficina }}</td></tr>
+                        <tr><td class="lbl">Transporte:</td><td>{{ envio.transporte }}</td></tr>
+                        <tr><td class="lbl">Remitente:</td><td><strong>{{ envio.nombre_remitente }}</strong></td></tr>
+                        <tr><td class="lbl">Telefono:</td><td>{{ envio.telefono_remitente }}</td></tr>
+                        <tr><td class="lbl">Direccion:</td><td>{{ envio.direccion_remitente }}</td></tr>
+                    </table>
+                </div>
+            </td>
+            <!-- DESTINATARIO -->
+            <td style="width:50%; vertical-align:top; padding-left:6px;">
+                <div class="section-box">
+                    <div class="section-head sh-green">Datos de Destino y Destinatario</div>
+                    <table class="info-table">
+                        <tr><td class="lbl">Ciudad Destino:</td><td><strong>{{ envio.ciudad_destino }}</strong></td></tr>
+                        <tr><td class="lbl">Destinatario:</td><td><strong>{{ envio.nombre_destinatario }}</strong></td></tr>
+                        <tr><td class="lbl">Telefono:</td><td>{{ envio.telefono_destinatario }}</td></tr>
+                        <tr><td class="lbl">Direccion Entrega:</td><td>{{ envio.direccion_destinatario }}</td></tr>
+                        {% if envio.correo_destinatario %}
+                        <tr><td class="lbl">Correo:</td><td>{{ envio.correo_destinatario }}</td></tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- DETALLES DEL PAQUETE -->
+    <div class="section-box">
+        <div class="section-head sh-blue">Especificaciones del Paquete</div>
+        <table class="info-table">
+            <tr>
+                <td class="lbl">Descripcion del contenido:</td>
+                <td colspan="3">{{ envio.descripcion }}</td>
+            </tr>
+            <tr>
+                <td class="lbl">Peso:</td>
+                <td><strong>{{ envio.peso }} kg</strong></td>
+                <td class="lbl">Dimensiones:</td>
+                <td>{{ envio.dimensiones|default:"---" }}</td>
+            </tr>
+            <tr>
+                <td class="lbl">Costo del Envio:</td>
+                <td><strong style="color:#157347;">$ {{ envio.costo }}</strong></td>
+                <td class="lbl">&nbsp;</td>
+                <td>&nbsp;</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- QR + OBSERVACIONES -->
+    <table class="qr-obs-table">
+        <tr>
+            <td class="qr-cell">
+                <div class="qr-border">
+                    {% if qr_base64 %}
+                        <img src="data:image/png;base64,{{ qr_base64 }}" alt="QR">
+                    {% endif %}
+                </div>
+                <p class="qr-cap">
+                    Escanea para rastrear<br>
+                    <strong>{{ envio.numero_tracking }}</strong>
+                </p>
+            </td>
+            <td class="obs-cell">
+                <div class="section-box">
+                    <div class="section-head sh-gray">Observaciones e Informacion Adicional</div>
+                    <table class="info-table">
+                        {% if envio.observaciones %}
+                        <tr>
+                            <td class="lbl">Observaciones:</td>
+                            <td>{{ envio.observaciones }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="2" style="color:#adb5bd; font-style:italic; padding:10px;">
+                                Sin observaciones adicionales registradas.
+                            </td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <td class="lbl">URL Rastreo:</td>
+                            <td style="font-size:8pt; color:#0d6efd;">
+                                {% if tracking_url %}{{ tracking_url }}{% else %}http://nexoraexpress.com/rastrear/{{ envio.numero_tracking }}/{% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="lbl">Fecha Registro:</td>
+                            <td>{{ envio.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="lbl">Ult. Actualizacion:</td>
+                            <td>{{ envio.fecha_actualizacion|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- FOOTER -->
+    <div class="doc-footer">
+        <strong>NEXORA EXPRESS</strong> &mdash; Latacunga, Ecuador
+        &nbsp;|&nbsp; Conserve este comprobante hasta la recepcion del paquete.
+        &nbsp;|&nbsp; Documento generado el {{ envio.fecha_creacion|date:"d/m/Y" }}
+    </div>
+
+    <!-- CORTE -->
+    <div class="cut-wrap">
+        <div class="cut-line"></div>
+        <span class="cut-lbl">Recortar y pegar en la caja del paquete</span>
+        <div class="cut-line"></div>
+    </div>
+
+    <!-- ETIQUETA ADHESIVA -->
+    <div class="sticker">
+        <table class="sticker-inner">
+            <tr>
+                <td class="sticker-from">
+                    <p class="sticker-lft">Remitente (Origen)</p>
+                    <p class="sticker-val">{{ envio.nombre_remitente }}</p>
+                    <p class="sticker-sub">Tel: {{ envio.telefono_remitente }}</p>
+                    <p class="sticker-sub">{{ envio.origen }} &mdash; {{ envio.oficina }}</p>
+                </td>
+                <td class="sticker-to">
+                    <p class="sticker-lft">Destinatario (Entrega)</p>
+                    <p class="sticker-val">{{ envio.nombre_destinatario }}</p>
+                    <p class="sticker-sub">Tel: {{ envio.telefono_destinatario }}</p>
+                    <p class="sticker-sub">{{ envio.ciudad_destino }} &mdash; {{ envio.direccion_destinatario|truncatewords:8 }}</p>
+                </td>
+            </tr>
+        </table>
+        <div class="sticker-code">
+            {{ envio.numero_tracking }}
+            <span style="font-size:8pt; color:#6c757d; margin-left:10px; font-weight:normal;">NEXORA EXPRESS</span>
+        </div>
+    </div>
+
+</body>
+</html>

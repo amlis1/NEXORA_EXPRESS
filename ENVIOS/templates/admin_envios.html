@@ -13,6 +13,9 @@
         <p class="text-muted mb-0">Control global de encomiendas, rutas y reportes de recaudación</p>
       </div>
       <div class="d-flex gap-2">
+        <a href="{% url 'reporte_ingresos_pdf' %}" target="_blank" class="btn btn-outline-success fw-bold shadow-sm">
+          <i class="fa-solid fa-file-pdf me-1"></i> Imprimir Reporte
+        </a>
         <a href="{% url 'crear_envio' %}" class="btn btn-primary fw-bold shadow-sm">
           <i class="fa-solid fa-plus me-1"></i> Nueva Encomienda
         </a>
@@ -153,9 +156,16 @@
                       <a href="{% url 'rastrear_envio_codigo' envio.numero_tracking %}" class="btn btn-outline-primary fw-bold" title="Rastrear Encomienda">
                         <i class="fa-solid fa-eye"></i> Rastrear
                       </a>
+                      <a href="{% url 'descargar_guia_pdf' envio.numero_tracking %}" class="btn btn-outline-dark fw-bold" target="_blank" title="Descargar Guía PDF">
+                        <i class="fa-solid fa-file-pdf"></i> PDF
+                      </a>
                       <a href="{% url 'admin_actualizar_envio' envio.id %}" class="btn btn-warning fw-bold" title="Actualizar Estado">
                         <i class="fa-solid fa-pen-to-square"></i> Actualizar
                       </a>
+                      <button type="button" class="btn btn-outline-success fw-bold btn-reenviar" 
+                              data-id="{{ envio.id }}" data-tracking="{{ envio.numero_tracking }}" title="Reenviar Guía por Correo">
+                        <i class="fa-solid fa-paper-plane"></i> Reenviar
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -188,6 +198,76 @@
       responsive: true
     });
 
+  });
+</script>
+
+<!-- SCRIPT PARA REENVIAR GUÍA CON SWEETALERT2 -->
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('.btn-reenviar').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var envioId = this.getAttribute('data-id');
+        var tracking = this.getAttribute('data-tracking');
+        var btnEl = this;
+
+        Swal.fire({
+          title: 'Reenviar Guía de Envío',
+          html: "Se reenviará la guía PDF al correo registrado del envío <strong>" + tracking + "</strong>.",
+          icon: 'info',
+          showCancelButton: true,
+          confirmButtonColor: '#198754',
+          cancelButtonColor: '#6c757d',
+          confirmButtonText: '<i class="fa-solid fa-paper-plane me-1"></i> Sí, Reenviar',
+          cancelButtonText: 'Cancelar'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            btnEl.disabled = true;
+            btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Enviando...';
+
+            fetch("/panel/envio/" + envioId + "/reenviar/", {
+              method: 'POST',
+              headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+              }
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                Swal.fire({
+                  title: '¡Mensaje Reenviado Exitosamente!',
+                  html: "La guía de envío <strong>" + tracking + "</strong> ha sido reenviada al correo registrado.",
+                  icon: 'success',
+                  confirmButtonColor: '#198754',
+                  confirmButtonText: 'Aceptar'
+                });
+              } else {
+                Swal.fire({
+                  title: 'Error',
+                  text: data.message || 'No se pudo reenviar la guía.',
+                  icon: 'error',
+                  confirmButtonColor: '#dc3545',
+                  confirmButtonText: 'Aceptar'
+                });
+              }
+              btnEl.disabled = false;
+              btnEl.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Reenviar';
+            })
+            .catch(function() {
+              Swal.fire({
+                title: 'Error de Conexión',
+                text: 'No se pudo conectar con el servidor.',
+                icon: 'error',
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'Aceptar'
+              });
+              btnEl.disabled = false;
+              btnEl.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Reenviar';
+            });
+          }
+        });
+      });
+    });
   });
 </script>
 {% endblock %}
