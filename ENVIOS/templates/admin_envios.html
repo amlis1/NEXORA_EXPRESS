@@ -174,12 +174,14 @@
                               data-id="{{ envio.id }}" data-tracking="{{ envio.numero_tracking }}" title="Reenviar Guía por Correo">
                         <i class="fa-solid fa-paper-plane"></i> Reenviar
                       </button>
-                      <button type="button" class="btn btn-outline-danger fw-bold btn-eliminar"
-                              data-url="{% url 'eliminar_envio' envio.id %}"
-                              data-tracking="{{ envio.numero_tracking }}"
-                              title="Eliminar Encomienda">
-                        <i class="fa-solid fa-trash-can"></i> Eliminar
-                      </button>
+                       <button type="button" class="btn btn-outline-danger fw-bold btn-eliminar"
+                               data-url="{% url 'eliminar_envio' envio.id %}"
+                               data-tracking="{{ envio.numero_tracking }}"
+                               data-estado="{{ envio.estado }}"
+                               data-estado-texto="{{ envio.get_estado_display }}"
+                               title="Eliminar Encomienda">
+                         <i class="fa-solid fa-trash-can"></i> Eliminar
+                       </button>
                     </div>
                   </td>
                 </tr>
@@ -224,6 +226,19 @@
       btn.addEventListener('click', function() {
         var deleteUrl = this.getAttribute('data-url');
         var tracking = this.getAttribute('data-tracking');
+        var estado = this.getAttribute('data-estado');
+
+        if (estado === 'pendiente' || estado === 'en_transito') {
+          var estadoTexto = this.getAttribute('data-estado-texto');
+          Swal.fire({
+            title: 'No se puede eliminar',
+            html: "La encomienda <strong>" + tracking + "</strong> se encuentra en estado <strong>" + estadoTexto + "</strong>.<br>Solo se pueden eliminar envíos cancelados o entregados.",
+            icon: 'warning',
+            confirmButtonColor: '#ffc107',
+            confirmButtonText: '<i class="fa-solid fa-check me-1"></i> Entendido'
+          });
+          return;
+        }
 
         Swal.fire({
           title: '¿Eliminar Encomienda?',

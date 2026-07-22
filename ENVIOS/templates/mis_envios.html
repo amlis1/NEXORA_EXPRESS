@@ -83,6 +83,8 @@
                         <button type="button" class="btn btn-outline-danger btn-sm fw-bold rounded-pill btn-eliminar"
                                 data-url="{% url 'eliminar_envio' envio.id %}"
                                 data-tracking="{{ envio.numero_tracking }}"
+                                data-estado="{{ envio.estado }}"
+                                data-estado-texto="{{ envio.get_estado_display }}"
                                 title="Eliminar encomienda">
                           <i class="fa-solid fa-trash-can me-1"></i> Eliminar
                         </button>
@@ -121,6 +123,19 @@
       btn.addEventListener('click', function() {
         var deleteUrl = this.getAttribute('data-url');
         var tracking = this.getAttribute('data-tracking');
+        var estado = this.getAttribute('data-estado');
+
+        if (estado === 'pendiente' || estado === 'en_transito') {
+          var estadoTexto = this.getAttribute('data-estado-texto');
+          Swal.fire({
+            title: 'No se puede eliminar',
+            html: "Tu encomienda <strong>" + tracking + "</strong> se encuentra en estado <strong>" + estadoTexto + "</strong>.<br>Solo se pueden eliminar envíos cancelados o entregados.",
+            icon: 'warning',
+            confirmButtonColor: '#ffc107',
+            confirmButtonText: '<i class="fa-solid fa-check me-1"></i> Entendido'
+          });
+          return;
+        }
 
         Swal.fire({
           title: '¿Eliminar Encomienda?',
