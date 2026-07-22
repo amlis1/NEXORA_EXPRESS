@@ -269,6 +269,19 @@ def dashboard(request):
     datos_ciudad = [item['total'] for item in ciudades_data]
 
     # 2. Gráfico de Pastel (Pie): Distribución de Envíos por Estado
+    COLOR_MAP = {
+        'pendiente': 'rgba(255, 193, 7, 0.85)',    # Amarillo (Pendiente)
+        'en_transito': 'rgba(13, 202, 240, 0.85)', # Cyan (En Tránsito)
+        'entregado': 'rgba(25, 135, 84, 0.85)',    # Verde (Entregado)
+        'cancelado': 'rgba(220, 53, 69, 0.85)',    # Rojo (Cancelado)
+    }
+    BORDER_MAP = {
+        'pendiente': 'rgba(255, 193, 7, 1)',
+        'en_transito': 'rgba(13, 202, 240, 1)',
+        'entregado': 'rgba(25, 135, 84, 1)',
+        'cancelado': 'rgba(220, 53, 69, 1)',
+    }
+
     estado_labels_map = dict(Envio.ESTADO_CHOICES)
     estados_data = (
         Envio.objects.values('estado')
@@ -277,6 +290,8 @@ def dashboard(request):
     )
     etiquetas_estado = [estado_labels_map.get(item['estado'], item['estado']) for item in estados_data]
     datos_estado = [item['total'] for item in estados_data]
+    colores_estado = [COLOR_MAP.get(item['estado'], 'rgba(108, 117, 125, 0.85)') for item in estados_data]
+    bordes_estado = [BORDER_MAP.get(item['estado'], 'rgba(108, 117, 125, 1)') for item in estados_data]
 
     context = {
         "recaudado_mes": recaudado_mes,
@@ -290,6 +305,8 @@ def dashboard(request):
         "datos_ciudad_json": json.dumps(datos_ciudad),
         "etiquetas_estado_json": json.dumps(etiquetas_estado),
         "datos_estado_json": json.dumps(datos_estado),
+        "colores_estado_json": json.dumps(colores_estado),
+        "bordes_estado_json": json.dumps(bordes_estado),
     }
     return render(request, "dashboard.html", context)
 
