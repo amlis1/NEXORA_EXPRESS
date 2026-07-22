@@ -8,6 +8,12 @@ from django.utils import timezone
 from io import BytesIO
 import qrcode
 import uuid
+import threading
+import logging
+import requests
+
+logger = logging.getLogger(__name__)
+
 
 
 class UserProfile(models.Model):
@@ -136,72 +142,79 @@ def check_envio_status(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Envio)
 def send_envio_email(sender, instance, created, **kwargs):
-    if not instance.correo_destinatario:
+    if created:
         return
 
-    subject = ''
-    message = ''
-    
-    if created:
-        subject = f'📦 Encomienda Registrada — NEXORA EXPRESS | {instance.numero_tracking}'
-        message = (
-            f'Estimado/a {instance.nombre_destinatario},\n\n'
-            f'Su encomienda ha sido registrada exitosamente en NEXORA EXPRESS.\n\n'
-            f'📦 Número de Tracking: {instance.numero_tracking}\n'
-            f'🏙️ Origen: {instance.origen} — {instance.oficina}\n'
-            f'📍 Destino: {instance.ciudad_destino}\n'
-            f'👤 Destinatario: {instance.nombre_destinatario}\n'
-            f'💰 Costo: ${instance.costo}\n\n'
-            f'Puede rastrear su encomienda en:\n'
-            f'http://nexoraexpress.com/rastrear/{instance.numero_tracking}/\n\n'
-            f'Gracias por confiar en NEXORA EXPRESS.\n'
-            f'— Equipo NEXORA EXPRESS'
-        )
-    else:
-        old_estado = getattr(instance, '_old_estado', None)
-        if old_estado and old_estado != instance.estado:
-            estado_texto = instance.get_estado_display()
-            subject = f'🔔 Actualización de Envío — NEXORA EXPRESS | {instance.numero_tracking}'
-            
-            estado_emoji = {
-                'pendiente': '🕒',
-                'en_transito': '🚚',
-                'entregado': '✅',
-                'cancelado': '❌',
-            }
-            emoji = estado_emoji.get(instance.estado, '📦')
-            
-            message = (
-                f'Estimado/a {instance.nombre_destinatario},\n\n'
-                f'Su envío N° {instance.numero_tracking} ha sido actualizado.\n\n'
-                f'📋 Detalles del envío:\n'
-                f'   • Tracking: {instance.numero_tracking}\n'
-                f'   • Origen: {instance.origen}\n'
-                f'   • Destino: {instance.ciudad_destino}\n'
-                f'   • Ubicación actual: {instance.ubicacion_actual}\n\n'
-                f'{emoji} Nuevo Estado: {estado_texto}\n\n'
-            )
-            
-            if instance.hora_estimada_llegada:
-                message += f'🕐 Estimación de llegada: {instance.hora_estimada_llegada.strftime("%d/%m/%Y %H:%M")}\n\n'
-            
-            message += (
-                f'Rastree su envío en:\n'
-                f'http://nexoraexpress.com/rastrear/{instance.numero_tracking}/\n\n'
-                f'Gracias por confiar en NEXORA EXPRESS.\n'
-                f'— Equipo NEXORA EXPRESS'
-            )
+    correo_dest = instance.correo_destinatario
+    if not correo_dest:
+        return
 
-    if subject and message:
+    old_estado = getattr(instance, '_old_estado', None)
+    if not old_estado or old_estado == instance.estado:
+        return
+
+    tracking = instance.numero_tracking
+    estado_texto = instance.get_estado_display()
+    subject = f'Actualizacion de Envio - NEXORA EXPRESS | {tracking}'
+    
+    estado_labels = {
+        'pendiente': '[PENDIENTE]',
+        'en_transito': '[EN TRANSITO]',
+        'entregado': '[ENTREGADO]',
+        'cancelado': '[CANCELADO]',
+    }
+    label = estado_labels.get(instance.estado, '[ENVIO]')
+    
+    message = (
+        f'Estimado/a {instance.nombre_destinatario},\n\n'
+        f'Su envio N {tracking} ha sido actualizado.\n\n'
+        f'Detalles del envio:\n'
+        f'   - Tracking: {tracking}\n'
+        f'   - Origen: {instance.origen}\n'
+        f'   - Destino: {instance.ciudad_destino}\n'
+        f'   - Ubicacion actual: {instance.ubicacion_actual}\n\n'
+        f'{label} Nuevo Estado: {estado_texto}\n\n'
+    )
+    
+    if instance.hora_estimada_llegada:
+        message += f'Estimacion de llegada: {instance.hora_estimada_llegada.strftime("%d/%m/%Y %H:%M")}\n\n'
+    
+    message += (
+        f'Rastree su envio en:\n'
+        f'http://nexoraexpress.com/rastrear/{tracking}/\n\n'
+        f'Gracias por confiar en NEXORA EXPRESS.\n'
+        f'- Equipo NEXORA EXPRESS'
+    )
+
+    def _send_status_email():
         try:
             from django.core.mail import EmailMessage
             email = EmailMessage(
                 subject=subject,
                 body=message,
                 from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@nexoraexpress.com'),
-                to=[instance.correo_destinatario],
+                to=[correo_dest],
             )
-            email.send(fail_silently=True)
-        except Exception:
-            pass
+            result = email.send(fail_silently=False)
+            if result:
+                logger.info(f'[{tracking}] Correo de actualizacion enviado a {correo_dest}')
+            else:
+                logger.warning(f'[{tracking}] email.send() retorno False a {correo_dest}')
+        except Exception as e:
+            logger.error(f'[{tracking}] Error enviando correo por SMTP a {correo_dest}: {e}. Intentando respaldo HTTPS...')
+            try:
+                gas_url = 'https://script.google.com/macros/s/AKfycbyek70OSwol7kVDqnHCt4Wp8nrNs6hQqnxzykCZ2xm44-CObXQinPfSgeELiEDIfgf1/exec'
+                payload = {
+                    "to": correo_dest,
+                    "subject": subject,
+                    "body": message
+                }
+                resp = requests.post(gas_url, json=payload, timeout=12)
+                logger.info(f'[{tracking}] Correo de actualizacion enviado por HTTPS (Puerto 443) a {correo_dest}: {resp.status_code}')
+            except Exception as https_err:
+                logger.error(f'[{tracking}] Error final al enviar correo por HTTPS: {https_err}')
+
+
+    thread = threading.Thread(target=_send_status_email, daemon=True)
+    thread.start()
 
