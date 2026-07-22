@@ -206,6 +206,14 @@
       return this.optional(element) || /^\d{7,15}$/.test(value);
     }, "Ingresa solo números (7 a 15 dígitos).");
 
+    // Validador: descripción con al menos 3 letras (no solo números ni 1 letra)
+    $.validator.addMethod("descValida", function(value, element) {
+      var texto = value.trim();
+      if (texto.length < 5) return false;
+      var letras = texto.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ]/g, '');
+      return letras.length >= 3;
+    }, "La descripción debe tener al menos 5 caracteres y contener palabras reales (no solo números). Ej: 'Documentos legales', 'Caja con ropa'");
+
     // Reglas de jQuery Validation
     $("#formCrearEnvio").validate({
       rules: {
@@ -248,7 +256,7 @@
         },
         descripcion: {
           required: true,
-          minlength: 5
+          descValida: true
         },
         peso: {
           required: true,
@@ -304,7 +312,7 @@
         },
         descripcion: {
           required: "Describe el contenido del paquete.",
-          minlength: "La descripción debe tener al menos 5 caracteres."
+          descValida: "La descripción debe contener palabras reales. Ej: 'Documentos legales', 'Caja con ropa', 'Electrodomésticos'."
         },
         peso: {
           required: "Ingresa el peso del paquete.",
