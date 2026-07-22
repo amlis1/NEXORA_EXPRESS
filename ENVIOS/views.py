@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, Count
 import json
+import logging
 from django.utils import timezone
 from datetime import datetime, timedelta
 from django.http import HttpResponse, JsonResponse
@@ -15,7 +16,12 @@ from xhtml2pdf import pisa
 from .models import UserProfile, Envio
 import base64
 import qrcode
+import requests
 from io import BytesIO
+import threading
+
+
+logger = logging.getLogger(__name__)
 
 
 def inicio(request):
@@ -185,8 +191,8 @@ def crear_envio(request):
                     hora_estimada_llegada=eta,
                     ubicacion_actual=f"Recepcionado en {oficina} ({origen})",
                 )
-                messages.success(request, f"Encomienda registrada con éxito. Código Tracking: {envio.numero_tracking}")
                 _enviar_guia_por_correo(request, envio)
+                messages.success(request, f"Encomienda registrada con exito. Codigo Tracking: {envio.numero_tracking}")
                 if request.user.profile.role == 'admin':
                     return redirect("admin_envios")
                 return redirect("mis_envios")
@@ -496,54 +502,98 @@ def _generar_pdf_bytes(envio, request=None):
 
 
 def _enviar_guia_por_correo(request, envio):
-    """Envía la guía PDF por correo al remitente (si tiene email) y al destinatario."""
     destinatarios = []
-    
-    # Correo del remitente (cliente que creó el envío)
-    if envio.remitente.email:
-        destinatarios.append(envio.remitente.email)
-    
-    # Correo del destinatario (si fue registrado)
+    email_remitente = None
+    email_destinatario = None
+    nombre_remitente = None
+
+    if envio.remitente and envio.remitente.email:
+        email_remitente = envio.remitente.email
+        destinatarios.append(email_remitente)
+
     if envio.correo_destinatario and envio.correo_destinatario not in destinatarios:
-        destinatarios.append(envio.correo_destinatario)
-    
+        email_destinatario = envio.correo_destinatario
+        destinatarios.append(email_destinatario)
+
+    nombre_remitente = envio.nombre_remitente
+    tracking = envio.numero_tracking
+    origen = envio.origen
+    oficina = envio.oficina
+    ciudad_destino = envio.ciudad_destino
+    nombre_destinatario = envio.nombre_destinatario
+    costo = envio.costo
+
     if not destinatarios:
-        return  # No hay correos, saltar silenciosamente
-    
+        logger.warning(f'[{tracking}] No hay correos destinatarios para enviar la guia.')
+        return
+
     try:
-        pdf_bytes = _generar_pdf_bytes(envio, request)
-        
-        nombre_remitente = envio.nombre_remitente
-        asunto = f'✅ Guía de Envío Registrada — NEXORA EXPRESS | {envio.numero_tracking}'
-        cuerpo = (
-            f'Estimado/a {nombre_remitente},\n\n'
-            f'Su encomienda ha sido registrada exitosamente en NEXORA EXPRESS.\n\n'
-            f'📦 Número de Tracking: {envio.numero_tracking}\n'
-            f'🏙️ Origen: {envio.origen} — {envio.oficina}\n'
-            f'📍 Destino: {envio.ciudad_destino}\n'
-            f'👤 Destinatario: {envio.nombre_destinatario}\n'
-            f'💰 Costo: ${envio.costo}\n\n'
-            f'Adjunto encontrará la guía de envío en formato PDF lista para imprimir.\n\n'
-            f'Puede rastrear su encomienda en:\n'
-            f'http://nexoraexpress.com/rastrear/{envio.numero_tracking}/\n\n'
-            f'Gracias por confiar en NEXORA EXPRESS.\n'
-            f'— Equipo NEXORA EXPRESS'
-        )
-        
-        email = EmailMessage(
-            subject=asunto,
-            body=cuerpo,
-            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@nexoraexpress.com'),
-            to=destinatarios,
-        )
-        email.attach(
-            filename=f'Guia_{envio.numero_tracking}.pdf',
-            content=pdf_bytes,
-            mimetype='application/pdf',
-        )
-        email.send(fail_silently=True)
-    except Exception:
-        pass  # El correo nunca debe bloquear el flujo principal
+        pdf_bytes = _generar_pdf_bytes(envio)
+        logger.info(f'[{tracking}] PDF generado correctamente ({len(pdf_bytes)} bytes)')
+    except Exception as e:
+        logger.error(f'[{tracking}] Error generando PDF: {e}')
+        pdf_bytes = None
+
+    if not pdf_bytes:
+        logger.error(f'[{tracking}] No se genero PDF, se omite envio de correo.')
+        return
+
+    def _send_pdf_email():
+        try:
+            asunto = f'Guia de Envio - NEXORA EXPRESS | {tracking}'
+            cuerpo = (
+                f'Estimado/a {nombre_remitente},\n\n'
+                f'Su encomienda ha sido registrada exitosamente en NEXORA EXPRESS.\n\n'
+                f'Numero de Tracking: {tracking}\n'
+                f'Origen: {origen} - {oficina}\n'
+                f'Destino: {ciudad_destino}\n'
+                f'Destinatario: {nombre_destinatario}\n'
+                f'Costo: ${costo}\n\n'
+                f'Adjunto encontrara la guia de envio en formato PDF lista para imprimir.\n\n'
+                f'Puede rastrear su encomienda en:\n'
+                f'http://nexoraexpress.com/rastrear/{tracking}/\n\n'
+                f'Gracias por confiar en NEXORA EXPRESS.\n'
+                f'- Equipo NEXORA EXPRESS'
+            )
+
+            email = EmailMessage(
+                subject=asunto,
+                body=cuerpo,
+                from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@nexoraexpress.com'),
+                to=destinatarios,
+            )
+            email.attach(
+                filename=f'Guia_{tracking}.pdf',
+                content=pdf_bytes,
+                mimetype='application/pdf',
+            )
+            result = email.send(fail_silently=False)
+            if result:
+                logger.info(f'[{tracking}] Correo enviado exitosamente a: {destinatarios}')
+            else:
+                logger.warning(f'[{tracking}] email.send() retorno False a: {destinatarios}')
+        except Exception as e:
+            logger.error(f'[{tracking}] Error enviando correo vía SMTP a {destinatarios}: {type(e).__name__}: {e}. Intentando respaldo HTTPS...')
+            try:
+                b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
+                gas_url = 'https://script.google.com/macros/s/AKfycbyek70OSwol7kVDqnHCt4Wp8nrNs6hQqnxzykCZ2xm44-CObXQinPfSgeELiEDIfgf1/exec'
+                for dest_email in destinatarios:
+                    payload = {
+                        "to": dest_email,
+                        "subject": asunto,
+                        "body": cuerpo,
+                        "filename": f'Guia_{tracking}.pdf',
+                        "fileData": b64_pdf,
+                        "mimeType": "application/pdf"
+                    }
+                    resp = requests.post(gas_url, json=payload, timeout=15)
+                    logger.info(f'[{tracking}] Correo enviado vía HTTPS (Puerto 443) a {dest_email}: {resp.status_code}')
+            except Exception as https_err:
+                logger.error(f'[{tracking}] Falló envío por HTTPS: {https_err}')
+
+
+    thread = threading.Thread(target=_send_pdf_email, daemon=True)
+    thread.start()
 
 
 @login_required
