@@ -137,6 +137,15 @@
       return this.optional(element) || /^\d{7,15}$/.test(value);
     }, "Ingresa solo números (7 a 15 dígitos).");
 
+    // Validador: observaciones con al menos 3 letras (no solo números ni 1 letra)
+    $.validator.addMethod("obsValida", function(value, element) {
+      if (!value || value.trim() === '') return true;
+      var texto = value.trim();
+      if (texto.length < 5) return false;
+      var letras = texto.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ]/g, '');
+      return letras.length >= 3;
+    }, "Las observaciones deben contener palabras reales (no solo números). Ej: 'Paquete en buen estado', 'Entrega sin novedad'");
+
     $("#formActualizarEnvio").validate({
       rules: {
         estado: "required",
@@ -146,6 +155,9 @@
         },
         transporte: {
           minlength: 3
+        },
+        observaciones: {
+          obsValida: true
         },
         hora_estimada_llegada: {
           minDateNow: true
@@ -159,6 +171,9 @@
         },
         transporte: {
           minlength: "El transporte debe tener al menos 3 caracteres."
+        },
+        observaciones: {
+          obsValida: "Las observaciones deben contener palabras reales. Ej: 'Paquete en buen estado', 'Entrega sin novedad'."
         },
         hora_estimada_llegada: {
           minDateNow: "La fecha estimada no puede ser anterior a la fecha y hora actual."
