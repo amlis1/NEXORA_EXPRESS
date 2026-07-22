@@ -331,20 +331,30 @@ def admin_actualizar_envio(request, envio_id):
 # FUNCIONES AUXILIARES: QR EN BASE64 Y ENVÍO DE PDF POR CORREO
 # ============================================================
 
-def _generar_qr_base64(tracking_code, request=None):
-    """Genera el QR del número de tracking como cadena base64 (para incrustar en PDF)."""
+def _generar_qr_base64(tracking_code, request=None, envio=None):
+    """Genera el QR con datos del envío como cadena base64 (para incrustar en PDF)."""
+    if envio:
+        qr_data = (
+            f"Tracking: {envio.numero_tracking}\n"
+            f"Remitente: {envio.nombre_remitente}\n"
+            f"Destinatario: {envio.nombre_destinatario}\n"
+            f"Fecha Recepcion: {envio.fecha_recepcion.strftime('%d/%m/%Y %H:%M')}"
+        )
+    else:
+        qr_data = tracking_code
+
     if request:
         tracking_url = request.build_absolute_uri(f'/rastrear/{tracking_code}/')
     else:
         tracking_url = f'http://nexoraexpress.com/rastrear/{tracking_code}/'
-    
+
     qr = qrcode.QRCode(
         version=1,
         error_correction=qrcode.constants.ERROR_CORRECT_H,
         box_size=8,
         border=2,
     )
-    qr.add_data(tracking_url)
+    qr.add_data(qr_data)
     qr.make(fit=True)
     img = qr.make_image(fill_color="black", back_color="white")
     
@@ -356,7 +366,7 @@ def _generar_qr_base64(tracking_code, request=None):
 
 def _generar_pdf_bytes(envio, request=None):
     """Genera el PDF de la guía de envío como bytes (para adjuntar en correo)."""
-    qr_base64, tracking_url = _generar_qr_base64(envio.numero_tracking, request)
+    qr_base64, tracking_url = _generar_qr_base64(envio.numero_tracking, request, envio=envio)
     template = get_template('guia_pdf.html')
     context = {
         'envio': envio,
@@ -445,7 +455,7 @@ def descargar_guia_pdf(request, tracking_code):
         messages.error(request, "Acceso denegado a la guía PDF.")
         return redirect("inicio")
 
-    qr_base64, tracking_url = _generar_qr_base64(envio.numero_tracking, request)
+    qr_base64, tracking_url = _generar_qr_base64(envio.numero_tracking, request, envio=envio)
     
     context = {
         'envio': envio,

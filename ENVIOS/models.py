@@ -4,6 +4,7 @@ from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.core.files import File
 from django.conf import settings
+from django.utils import timezone
 from io import BytesIO
 import qrcode
 import uuid
@@ -92,11 +93,13 @@ class Envio(models.Model):
     costo = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     qr_code = models.ImageField(upload_to='qr_codes/', blank=True, null=True, help_text="Código QR de rastreo")
 
+    fecha_recepcion = models.DateTimeField(default=timezone.now, help_text="Fecha y hora de recepción del paquete (se registra automáticamente)")
+
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-fecha_creacion']
+        ordering = ['-fecha_recepcion']
 
     def __str__(self):
         return f"{self.numero_tracking} - {self.nombre_destinatario} ({self.ciudad_destino})"
@@ -106,8 +109,13 @@ class Envio(models.Model):
             self.numero_tracking = f"NX-{uuid.uuid4().hex[:8].upper()}"
             
         if not self.qr_code:
-            tracking_link = f"http://tudominio.com/rastrear/{self.numero_tracking}/"
-            qr_img = qrcode.make(tracking_link)
+            qr_data = (
+                f"Tracking: {self.numero_tracking}\n"
+                f"Remitente: {self.nombre_remitente}\n"
+                f"Destinatario: {self.nombre_destinatario}\n"
+                f"Fecha Recepcion: {timezone.now().strftime('%d/%m/%Y %H:%M')}"
+            )
+            qr_img = qrcode.make(qr_data)
             buffer = BytesIO()
             qr_img.save(buffer, format='PNG')
             file_name = f'qr_{self.numero_tracking}.png'

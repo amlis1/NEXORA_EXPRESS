@@ -12,7 +12,40 @@
     </div>
 
     <div class="card-body p-4">
-      
+
+      <!-- INFORMACIÓN PRINCIPAL AL ESCANEAR QR -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm rounded-4 bg-primary text-white h-100 text-center p-3">
+            <div class="fs-2 mb-1"><i class="fa-solid fa-barcode"></i></div>
+            <small class="text-white-50 text-uppercase fw-bold">Tracking</small>
+            <h5 class="fw-bold mb-0">{{ envio.numero_tracking }}</h5>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm rounded-4 bg-info text-white h-100 text-center p-3">
+            <div class="fs-2 mb-1"><i class="fa-solid fa-user"></i></div>
+            <small class="text-white-50 text-uppercase fw-bold">Remitente</small>
+            <h5 class="fw-bold mb-0">{{ envio.nombre_remitente }}</h5>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm rounded-4 bg-success text-white h-100 text-center p-3">
+            <div class="fs-2 mb-1"><i class="fa-solid fa-user-check"></i></div>
+            <small class="text-white-50 text-uppercase fw-bold">Destinatario</small>
+            <h5 class="fw-bold mb-0">{{ envio.nombre_destinatario }}</h5>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card border-0 shadow-sm rounded-4 bg-dark text-white h-100 text-center p-3">
+            <div class="fs-2 mb-1"><i class="fa-solid fa-calendar-check"></i></div>
+            <small class="text-white-50 text-uppercase fw-bold">Fecha Recepción</small>
+            <h5 class="fw-bold mb-0">{{ envio.fecha_recepcion|date:"d/m/Y" }}</h5>
+            <small class="text-white-50">{{ envio.fecha_recepcion|date:"H:i" }}</small>
+          </div>
+        </div>
+      </div>
+
       <!-- Banner de Estado Actual -->
       <div class="alert {% if envio.estado == 'entregado' %}alert-success{% elif envio.estado == 'en_transito' %}alert-info{% elif envio.estado == 'pendiente' %}alert-warning{% else %}alert-danger{% endif %} shadow-sm d-flex align-items-center p-3 mb-4 rounded-3">
         <div class="fs-1 me-3">

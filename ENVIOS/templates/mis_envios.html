@@ -28,6 +28,7 @@
                   <th>Origen ➔ Destino</th>
                   <th>Destinatario</th>
                   <th>Ubicación Actual / ETA</th>
+                  <th>Fecha Recepción</th>
                   <th>Estado</th>
                   <th>Costo</th>
                   <th>Acción</th>
@@ -54,6 +55,10 @@
                       {% if envio.hora_estimada_llegada %}
                         <br><small class="text-muted"><i class="fa-regular fa-clock me-1"></i>ETA: {{ envio.hora_estimada_llegada|date:"d/m/Y H:i" }}</small>
                       {% endif %}
+                    </td>
+                    <td>
+                      <span class="fw-bold text-dark">{{ envio.fecha_recepcion|date:"d/m/Y" }}</span>
+                      <br><small class="text-muted">{{ envio.fecha_recepcion|date:"H:i" }}</small>
                     </td>
                     <td>
                       {% if envio.estado == 'pendiente' %}
@@ -115,7 +120,7 @@
         emptyTable: 'No tienes encomiendas registradas.',
         zeroRecords: 'No se encontraron resultados.'
       },
-      order: [[0, 'desc']],
+      order: [[4, 'desc']],
       pageLength: 10,
       responsive: true
     });

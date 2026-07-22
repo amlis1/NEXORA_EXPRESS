@@ -112,6 +112,7 @@
                 <th>Destinatario</th>
                 <th>Transporte / Oficina</th>
                 <th>Costo</th>
+                <th>Fecha Recepción</th>
                 <th>Estado</th>
                 <th class="text-center">Acciones</th>
               </tr>
@@ -140,6 +141,10 @@
                     <small class="text-muted"><strong>Of.:</strong> {{ envio.oficina }}</small>
                   </td>
                   <td class="fw-bold text-success">${{ envio.costo }}</td>
+                  <td>
+                    <span class="fw-bold text-dark">{{ envio.fecha_recepcion|date:"d/m/Y" }}</span>
+                    <br><small class="text-muted">{{ envio.fecha_recepcion|date:"H:i" }}</small>
+                  </td>
                   <td>
                     {% if envio.estado == 'pendiente' %}
                       <span class="badge bg-warning text-dark px-3 py-2 fs-7"><i class="fa-solid fa-clock me-1"></i>Pendiente</span>
@@ -193,7 +198,7 @@
         emptyTable: 'No se encontraron encomiendas en esta categoría.',
         zeroRecords: 'No se encontraron resultados.'
       },
-      order: [[0, 'desc']],
+      order: [[6, 'desc']],
       pageLength: 10,
       responsive: true
     });
