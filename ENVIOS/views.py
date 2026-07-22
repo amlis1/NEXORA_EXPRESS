@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, Count
 import json
 import logging
+import re
 from django.utils import timezone
 from datetime import datetime, timedelta
 from django.http import HttpResponse, JsonResponse
@@ -146,6 +147,10 @@ def crear_envio(request):
                     ciudad_destino, nombre_destinatario, telefono_destinatario, direccion_destinatario,
                     descripcion, peso]):
             messages.error(request, "Por favor, completa todos los campos obligatorios.")
+        elif len(descripcion.strip()) < 5:
+            messages.error(request, "La descripción debe tener al menos 5 caracteres.")
+        elif len(re.sub(r'[^a-zA-ZáéíóúÁÉÍÓÚñÑ]', '', descripcion.strip())) < 3:
+            messages.error(request, "La descripción debe contener palabras reales, no solo números. Ej: 'Documentos legales', 'Caja con ropa'.")
         else:
             try:
                 peso_val = float(peso)
@@ -389,6 +394,12 @@ def eliminar_envio(request, envio_id):
         messages.error(request, "No tienes permiso para eliminar esta encomienda.")
         return redirect("inicio")
 
+    if envio.estado in ('pendiente', 'en_transito'):
+        messages.error(request, f"No se puede eliminar la encomienda '{envio.numero_tracking}' porque esta en estado '{envio.get_estado_display()}'. Solo se pueden eliminar envios cancelados o entregados.")
+        if is_admin:
+            return redirect("admin_envios")
+        return redirect("mis_envios")
+
     tracking = envio.numero_tracking
     envio.delete()
     messages.success(request, f"La encomienda '{tracking}' ha sido eliminada con éxito.")
@@ -416,6 +427,13 @@ def admin_actualizar_envio(request, envio_id):
         if nuevo_estado not in dict(Envio.ESTADO_CHOICES):
             messages.error(request, "Estado no válido.")
             return redirect("admin_envios")
+
+        if observaciones and len(observaciones) < 5:
+            messages.error(request, "Las observaciones deben tener al menos 5 caracteres.")
+            return render(request, "admin_actualizar_envio.html", {"envio": envio})
+        if observaciones and len(re.sub(r'[^a-zA-ZáéíóúÁÉÍÓÚñÑ]', '', observaciones)) < 3:
+            messages.error(request, "Las observaciones deben contener palabras reales, no solo números. Ej: 'Paquete en buen estado'.")
+            return render(request, "admin_actualizar_envio.html", {"envio": envio})
 
         envio.estado = nuevo_estado
 
