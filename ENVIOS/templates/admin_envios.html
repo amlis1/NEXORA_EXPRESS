@@ -2,6 +2,9 @@
 {% load static %}
 
 {% block contenido %}
+<!-- CDN de Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <section class="padding-medium">
   <div class="container my-4">
     
@@ -171,6 +174,12 @@
                               data-id="{{ envio.id }}" data-tracking="{{ envio.numero_tracking }}" title="Reenviar Guía por Correo">
                         <i class="fa-solid fa-paper-plane"></i> Reenviar
                       </button>
+                      <button type="button" class="btn btn-outline-danger fw-bold btn-eliminar"
+                              data-url="{% url 'eliminar_envio' envio.id %}"
+                              data-tracking="{{ envio.numero_tracking }}"
+                              title="Eliminar Encomienda">
+                        <i class="fa-solid fa-trash-can"></i> Eliminar
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -206,9 +215,44 @@
   });
 </script>
 
-<!-- SCRIPT PARA REENVIAR GUÍA CON SWEETALERT2 -->
+<!-- SCRIPT PARA REENVIAR Y ELIMINAR CON SWEETALERT2 -->
 <script>
   document.addEventListener("DOMContentLoaded", function() {
+    
+    // Handler para Eliminar
+    document.querySelectorAll('.btn-eliminar').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var deleteUrl = this.getAttribute('data-url');
+        var tracking = this.getAttribute('data-tracking');
+
+        Swal.fire({
+          title: '¿Eliminar Encomienda?',
+          html: "Estás a punto de eliminar la encomienda <strong>" + tracking + "</strong>.<br><small class='text-danger fw-bold'>Esta acción no se puede deshacer.</small>",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#dc3545',
+          cancelButtonColor: '#6c757d',
+          confirmButtonText: '<i class="fa-solid fa-trash-can me-1"></i> Sí, Eliminar',
+          cancelButtonText: 'Cancelar'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            Swal.fire({
+              title: 'Eliminando encomienda...',
+              text: 'Por favor espera un momento.',
+              icon: 'info',
+              showConfirmButton: false,
+              allowOutsideClick: false,
+              didOpen: () => {
+                Swal.showLoading();
+              }
+            });
+            window.location.href = deleteUrl;
+          }
+        });
+      });
+    });
+
+    // Handler para Reenviar
     document.querySelectorAll('.btn-reenviar').forEach(function(btn) {
       btn.addEventListener('click', function() {
         var envioId = this.getAttribute('data-id');

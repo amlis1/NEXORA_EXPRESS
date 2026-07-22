@@ -80,6 +80,12 @@
                         <a href="{% url 'descargar_guia_pdf' envio.numero_tracking %}" class="btn btn-outline-dark btn-sm fw-bold rounded-pill" target="_blank" title="Descargar guía PDF">
                           <i class="fa-solid fa-file-pdf me-1"></i> PDF
                         </a>
+                        <button type="button" class="btn btn-outline-danger btn-sm fw-bold rounded-pill btn-eliminar"
+                                data-url="{% url 'eliminar_envio' envio.id %}"
+                                data-tracking="{{ envio.numero_tracking }}"
+                                title="Eliminar encomienda">
+                          <i class="fa-solid fa-trash-can me-1"></i> Eliminar
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -107,9 +113,42 @@
   </div>
 </section>
 
-<!-- INICIALIZACIÓN DATATABLES EN ESPAÑOL -->
+<!-- INICIALIZACIÓN DATATABLES Y SWEETALERT2 -->
 <script>
   document.addEventListener("DOMContentLoaded", function() {
+    // Handler para Eliminar Encomienda
+    document.querySelectorAll('.btn-eliminar').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var deleteUrl = this.getAttribute('data-url');
+        var tracking = this.getAttribute('data-tracking');
+
+        Swal.fire({
+          title: '¿Eliminar Encomienda?',
+          html: "Estás a punto de eliminar tu encomienda <strong>" + tracking + "</strong>.<br><small class='text-danger fw-bold'>Esta acción no se puede deshacer.</small>",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#dc3545',
+          cancelButtonColor: '#6c757d',
+          confirmButtonText: '<i class="fa-solid fa-trash-can me-1"></i> Sí, Eliminar',
+          cancelButtonText: 'Cancelar'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            Swal.fire({
+              title: 'Eliminando encomienda...',
+              text: 'Por favor espera un momento.',
+              icon: 'info',
+              showConfirmButton: false,
+              allowOutsideClick: false,
+              didOpen: () => {
+                Swal.showLoading();
+              }
+            });
+            window.location.href = deleteUrl;
+          }
+        });
+      });
+    });
+
     $.fn.dataTable.ext.errMode = 'none';
     if ($.fn.DataTable.isDataTable('#tablaMisEnvios')) {
       $('#tablaMisEnvios').DataTable().destroy();

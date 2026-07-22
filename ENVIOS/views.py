@@ -3,7 +3,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Sum
+from django.db.models import Sum, Count
+import json
 from django.utils import timezone
 from datetime import datetime, timedelta
 from django.http import HttpResponse, JsonResponse
@@ -242,6 +243,58 @@ def rastrear_envio(request, tracking_code=None):
 
 
 @login_required
+def dashboard(request):
+    if not hasattr(request.user, 'profile') or request.user.profile.role != 'admin':
+        messages.error(request, "No tienes permiso para acceder al Dashboard.")
+        return redirect("inicio")
+
+    now = timezone.now()
+    recaudado_mes = Envio.objects.filter(
+        fecha_creacion__year=now.year,
+        fecha_creacion__month=now.month
+    ).aggregate(Sum('costo'))['costo__sum'] or 0
+
+    total_pendientes = Envio.objects.filter(estado='pendiente').count()
+    total_transito = Envio.objects.filter(estado='en_transito').count()
+    total_entregados = Envio.objects.filter(estado='entregado').count()
+    total_cancelados = Envio.objects.filter(estado='cancelado').count()
+
+    # 1. Gráfico de Barras: Envíos por Ciudad de Destino
+    ciudades_data = (
+        Envio.objects.values('ciudad_destino')
+        .annotate(total=Count('id'))
+        .order_by('-total')
+    )
+    etiquetas_ciudad = [item['ciudad_destino'] for item in ciudades_data]
+    datos_ciudad = [item['total'] for item in ciudades_data]
+
+    # 2. Gráfico de Pastel (Pie): Distribución de Envíos por Estado
+    estado_labels_map = dict(Envio.ESTADO_CHOICES)
+    estados_data = (
+        Envio.objects.values('estado')
+        .annotate(total=Count('id'))
+        .order_by('-total')
+    )
+    etiquetas_estado = [estado_labels_map.get(item['estado'], item['estado']) for item in estados_data]
+    datos_estado = [item['total'] for item in estados_data]
+
+    context = {
+        "recaudado_mes": recaudado_mes,
+        "total_pendientes": total_pendientes,
+        "total_transito": total_transito,
+        "total_entregados": total_entregados,
+        "total_cancelados": total_cancelados,
+        "mes_actual": now.strftime("%B %Y"),
+
+        "etiquetas_ciudad_json": json.dumps(etiquetas_ciudad),
+        "datos_ciudad_json": json.dumps(datos_ciudad),
+        "etiquetas_estado_json": json.dumps(etiquetas_estado),
+        "datos_estado_json": json.dumps(datos_estado),
+    }
+    return render(request, "dashboard.html", context)
+
+
+@login_required
 def admin_envios(request):
     if not hasattr(request.user, 'profile') or request.user.profile.role != 'admin':
         messages.error(request, "No tienes permiso para acceder a esta sección.")
@@ -264,6 +317,26 @@ def admin_envios(request):
     total_entregados = Envio.objects.filter(estado='entregado').count()
     total_cancelados = Envio.objects.filter(estado='cancelado').count()
 
+    # --- DATOS PARA GRÁFICOS DEL DASHBOARD ---
+    # 1. Gráfico de Barras: Envíos por Ciudad de Destino
+    ciudades_data = (
+        Envio.objects.values('ciudad_destino')
+        .annotate(total=Count('id'))
+        .order_by('-total')
+    )
+    etiquetas_ciudad = [item['ciudad_destino'] for item in ciudades_data]
+    datos_ciudad = [item['total'] for item in ciudades_data]
+
+    # 2. Gráfico de Pastel (Pie/Doughnut): Distribución de Envíos por Estado
+    estado_labels_map = dict(Envio.ESTADO_CHOICES)
+    estados_data = (
+        Envio.objects.values('estado')
+        .annotate(total=Count('id'))
+        .order_by('-total')
+    )
+    etiquetas_estado = [estado_labels_map.get(item['estado'], item['estado']) for item in estados_data]
+    datos_estado = [item['total'] for item in estados_data]
+
     context = {
         "envios": envios,
         "estado_filtro": estado_filtro,
@@ -273,8 +346,33 @@ def admin_envios(request):
         "total_entregados": total_entregados,
         "total_cancelados": total_cancelados,
         "mes_actual": now.strftime("%B %Y"),
+
+        # JSON para Chart.js
+        "etiquetas_ciudad_json": json.dumps(etiquetas_ciudad),
+        "datos_ciudad_json": json.dumps(datos_ciudad),
+        "etiquetas_estado_json": json.dumps(etiquetas_estado),
+        "datos_estado_json": json.dumps(datos_estado),
     }
     return render(request, "admin_envios.html", context)
+
+
+@login_required
+def eliminar_envio(request, envio_id):
+    envio = get_object_or_404(Envio, id=envio_id)
+    is_owner = (request.user == envio.remitente)
+    is_admin = hasattr(request.user, 'profile') and request.user.profile.role == 'admin'
+
+    if not (is_owner or is_admin):
+        messages.error(request, "No tienes permiso para eliminar esta encomienda.")
+        return redirect("inicio")
+
+    tracking = envio.numero_tracking
+    envio.delete()
+    messages.success(request, f"La encomienda '{tracking}' ha sido eliminada con éxito.")
+
+    if is_admin and request.user.profile.role == 'admin':
+        return redirect("admin_envios")
+    return redirect("mis_envios")
 
 
 @login_required

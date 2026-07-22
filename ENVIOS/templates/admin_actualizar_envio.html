@@ -176,15 +176,25 @@
         var estadoTexto = $("#estado option:selected").text();
         Swal.fire({
           title: '¿Guardar cambios?',
-          text: "El nuevo estado del paquete cambiará a: " + estadoTexto,
-          icon: 'warning',
+          text: "El estado del paquete cambiará a: " + estadoTexto,
+          icon: 'question',
           showCancelButton: true,
           confirmButtonColor: '#ffc107',
           cancelButtonColor: '#6c757d',
-          confirmButtonText: 'Sí, Guardar',
+          confirmButtonText: '<i class="fa-solid fa-floppy-disk me-1"></i> Sí, Guardar',
           cancelButtonText: 'Cancelar'
         }).then((result) => {
           if (result.isConfirmed) {
+            Swal.fire({
+              title: 'Actualizando encomienda...',
+              text: 'Guardando datos y enviando notificaciones...',
+              icon: 'info',
+              showConfirmButton: false,
+              allowOutsideClick: false,
+              didOpen: () => {
+                Swal.showLoading();
+              }
+            });
             form.submit();
           }
         });

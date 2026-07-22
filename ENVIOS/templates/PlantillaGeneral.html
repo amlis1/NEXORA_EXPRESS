@@ -126,6 +126,9 @@
                     <li class="nav-item">
                       <a class="nav-link me-4" href="{% url 'admin_envios' %}">Gestionar Envíos</a>
                     </li>
+                    <li class="nav-item">
+                      <a class="nav-link me-4" href="{% url 'dashboard' %}">Dashboard</a>
+                    </li>
                   {% elif user.profile.role == 'cliente' %}
                     <li class="nav-item">
                       <a class="nav-link me-4" href="{% url 'crear_envio' %}">Nuevo Envío</a>
