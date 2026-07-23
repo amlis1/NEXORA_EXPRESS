@@ -140,8 +140,10 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Email Settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'esteban.ochoa8693@utc.edu.ec' # Configure here
-EMAIL_HOST_PASSWORD = 'dgoxvywrdpayihxy' # Configure here
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True
+EMAIL_HOST_USER = 'esteban.ochoa8693@utc.edu.ec'
+EMAIL_HOST_PASSWORD = 'dgoxvywrdpayihxy'
+DEFAULT_FROM_EMAIL = 'NEXORA EXPRESS <esteban.ochoa8693@utc.edu.ec>'
+EMAIL_TIMEOUT = 15
 
